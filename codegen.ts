@@ -7,12 +7,13 @@ const config: CodegenConfig = {
       plugins: ['typescript', 'typescript-resolvers'],
       config: {
         avoidOptionals: true,
-        contextType: '../context#GraphQLContext',
+        contextType: '../../common/context/graphql-context#GraphQLContext',
         enumsAsConst: true,
         immutableTypes: true,
         maybeValue: 'T | null',
         scalars: {
           DateTime: 'Date',
+          JSON: 'Record<string, unknown>',
         },
       },
     },

@@ -1,13 +1,13 @@
 import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
 import type { Plan } from '@prisma/client';
 
-import type { GraphQLContext } from '../../graphql/context';
+import type { GraphQLContext } from '../../../common/context/graphql-context';
 import type {
   InviteCode,
   MutationDeactivateInviteCodeArgs,
   MutationGenerateInviteCodeArgs,
   QueryValidateInviteCodeArgs,
-} from '../../graphql/generated/schema-types';
+} from '../../../graphql/generated/schema-types';
 import { InviteCodeService } from './invite-code.service';
 
 type InviteCodeRecord = {

@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
-import type { CurrentUser } from '../../graphql/context';
+import type { CurrentUser } from '../../../common/context/graphql-context';
 import { InviteCodeService } from './invite-code.service';
 
 type InviteCodeCreateCall = {
