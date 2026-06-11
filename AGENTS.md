@@ -76,11 +76,16 @@
 
 ### 커밋 메시지
 ```
-<type>(<scope>): <subject>
+<type>(<scope>): <subject 한글>
 
 Closes #<이슈번호>
 ```
-type: feat | fix | test | refactor | docs | chore | migrate
+- **subject는 반드시 한국어**로 작성 (예: `기능(auth): 로그인 리졸버 구현`)
+- type: feat | fix | test | refactor | docs | chore | migrate
+
+### PR 제목
+- **PR 제목도 반드시 한국어**로 작성 (예: `기능(auth): 로그인 리졸버 구현`)
+- 커밋 메시지와 동일한 형식 사용
 
 ### 사용 스킬
 `tdd`, `typescript-expert`, `database-optimizer`, `api-design-reviewer`, `code-review-expert`
