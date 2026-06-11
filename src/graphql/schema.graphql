@@ -1,3 +1,20 @@
+scalar DateTime
+
+"""회사 요금제"""
+enum CompanyPlan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+"""사용자 역할"""
+enum Role {
+  PASSENGER
+  DRIVER
+  BOTH
+  ADMIN
+}
+
 """Ridy 백엔드 서비스 상태"""
 type Health {
   """서비스 가용 상태"""
@@ -7,7 +24,72 @@ type Health {
   service: String!
 }
 
+"""기업 단위 카풀 격리 단위"""
+type Company {
+  id: ID!
+  name: String!
+  inviteCode: String!
+  domain: String
+  plan: CompanyPlan!
+  maxMembers: Int!
+  memberCount: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""사용자"""
+type User {
+  id: ID!
+  companyId: String!
+  employeeId: String
+  email: String!
+  name: String!
+  phone: String
+  imageUrl: String
+  provider: String
+  providerId: String
+  role: Role!
+  rating: Float!
+  rideCount: Int!
+  phoneVerified: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""회사 초대 코드"""
+type InviteCode {
+  id: ID!
+  companyId: String!
+  code: String!
+  createdBy: String!
+  maxUses: Int!
+  currentUses: Int!
+  expiresAt: DateTime
+  isActive: Boolean!
+  company: Company!
+  createdAt: DateTime!
+}
+
+input GenerateInviteCodeInput {
+  maxUses: Int
+  expiresAt: DateTime
+}
+
 type Query {
   """Ridy 백엔드 서비스 상태를 확인합니다."""
   health: Health!
+
+  """가입 전 초대 코드 유효성을 검증합니다."""
+  validateInviteCode(code: String!): InviteCode!
+
+  """현재 관리자의 회사 초대 코드 목록을 조회합니다."""
+  inviteCodes: [InviteCode!]!
+}
+
+type Mutation {
+  """현재 관리자의 회사에 초대 코드를 발급합니다."""
+  generateInviteCode(input: GenerateInviteCodeInput!): InviteCode!
+
+  """현재 관리자의 회사 초대 코드를 비활성화합니다."""
+  deactivateInviteCode(id: ID!): InviteCode!
 }
