@@ -72,7 +72,7 @@ backend/
 
 ## 에이전트 작업 가이드
 
-- 작업 지시서: [docs/agents/DEVELOPER_TASKS.md](https://github.com/project-ridy/docs/blob/main/agents/DEVELOPER_TASKS.md)
+- 작업 지시서: [agents/tasks/DEVELOPER_TASKS.md](https://github.com/project-ridy/agents/blob/main/tasks/DEVELOPER_TASKS.md)
 - DB 스키마: [docs/architecture/DATABASE.md](https://github.com/project-ridy/docs/blob/main/architecture/DATABASE.md)
 - 아키텍처: [docs/architecture/ARCHITECTURE.md](https://github.com/project-ridy/docs/blob/main/architecture/ARCHITECTURE.md)
 
