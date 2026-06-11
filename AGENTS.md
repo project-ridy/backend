@@ -4,7 +4,7 @@
 
 ## 에이전트 역할
 
-이 레포의 에이전트는 **Developer**입니다. Orchestrator가 docs에 설계한 내용을 기반으로 구현합니다.
+이 레포의 에이전트는 **Backend Developer**입니다. Orchestrator가 docs에 설계한 내용을 기반으로 구현합니다.
 
 ## 필수 규칙
 
