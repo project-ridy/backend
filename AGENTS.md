@@ -8,11 +8,15 @@
 
 ## 필수 규칙
 
+### 공통 작업 규칙
+- 모든 레포 공통 규칙은 [`project-ridy/docs/WORKFLOW.md`](https://github.com/project-ridy/docs/blob/main/WORKFLOW.md)를 최우선으로 따른다.
+- 이 파일은 backend 레포 전용 세부 규칙만 보완한다.
+
 ### 작업 흐름
 1. 모든 작업은 **GitHub Organization Project**의 이슈에서 시작 — https://github.com/orgs/project-ridy/projects/1
 2. 작업 시작 전 **이슈에 자신을 어사인** (`gh issue edit <번호> --add-assignee @me`)
 3. 이슈를 `In Progress`로 변경 후 작업 시작
-4. **기획서 확인** — `agents/plans/`의 해당 기획서를 읽고 코드 구조, 예외 처리, 테스트 시나리오를 파악
+4. **기획서 확인** — `project-ridy/docs/planning/implementation/`의 해당 구현 계획서를 읽고 코드 구조, 예외 처리, 테스트 시나리오를 파악
 5. 브랜치 생성: `<type>/<이슈번호>-<설명>` (feat, fix, test, refactor)
 6. PR 생성 후 머지, 이슈를 `Done`으로 변경
 7. **머지 완료 후 작업 브랜치 삭제** — 로컬/원격 모두 정리 (`git branch -d <branch> && git push origin --delete <branch>`)
