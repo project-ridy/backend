@@ -5,3 +5,322 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+// ============================================================
+// ENUM
+// ============================================================
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum Provider {
+  KAKAO
+  GOOGLE
+  APPLE
+}
+
+enum Role {
+  PASSENGER
+  DRIVER
+  BOTH
+  ADMIN
+}
+
+enum RideStatus {
+  OPEN
+  MATCHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum SettlementStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+// ============================================================
+// 기업 (Company) — 폐쇄형 카풀의 최상위 격리 단위
+// ============================================================
+
+model Company {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(100)
+  inviteCode  String   @unique @map("invite_code") @db.VarChar(20)
+  domain      String   @db.VarChar(100)
+  adminId     String   @unique @map("admin_id")
+  maxMembers  Int      @default(50) @map("max_members")
+  plan        Plan     @default(FREE)
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  // Relations
+  admin       User        @relation("CompanyAdmin", fields: [adminId], references: [id])
+  users       User[]
+  inviteCodes InviteCode[]
+  rides       Ride[]
+  settlements Settlement[]
+
+  @@map("companies")
+}
+
+// ============================================================
+// 초대 코드 (InviteCode) — 기업 관리자가 생성, 신규 구성원 가입용
+// ============================================================
+
+model InviteCode {
+  id          String    @id @default(uuid())
+  companyId   String    @map("company_id")
+  code        String    @db.VarChar(6)
+  createdBy   String    @map("created_by")
+  maxUses     Int       @default(10) @map("max_uses")
+  currentUses Int       @default(0) @map("current_uses")
+  expiresAt   DateTime? @map("expires_at")
+  isActive    Boolean   @default(true) @map("is_active")
+
+  // Relations
+  company     Company   @relation(fields: [companyId], references: [id])
+  creator     User      @relation("InviteCodeCreator", fields: [createdBy], references: [id])
+
+  @@unique([companyId, code])
+  @@map("invite_codes")
+}
+
+// ============================================================
+// 사용자 (User) — 반드시 하나의 기업에 소속
+// ============================================================
+
+model User {
+  id            String   @id @default(uuid())
+  companyId     String   @map("company_id")
+  employeeId    String?  @map("employee_id") @db.VarChar(50)
+  email         String   @unique @db.VarChar(255)
+  name          String   @db.VarChar(100)
+  phone         String?  @db.VarChar(20)
+  imageUrl      String?  @map("image_url") @db.Text
+  provider      Provider?
+  providerId    String?  @map("provider_id") @db.VarChar(255)
+  role          Role     @default(PASSENGER)
+  rating        Decimal  @default(0.0) @db.Decimal(2, 1)
+  rideCount     Int      @default(0) @map("ride_count")
+  phoneVerified Boolean  @default(false) @map("phone_verified")
+
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt      @map("updated_at")
+
+  // Relations
+  company            Company        @relation(fields: [companyId], references: [id])
+  vehicles           Vehicle[]
+  ridesAsDriver      Ride[]         @relation("RideDriver")
+  rideRequests       RideRequest[]
+  reviewsGiven       Review[]       @relation("ReviewFrom")
+  reviewsRecv        Review[]       @relation("ReviewTo")
+  payments           PaymentMethod[]
+  settlements        Settlement[]
+  createdInviteCodes InviteCode[]   @relation("InviteCodeCreator")
+  messages           Message[]
+  adminOf            Company?       @relation("CompanyAdmin")
+
+  @@unique([companyId, employeeId])
+  @@map("users")
+}
+
+// ============================================================
+// 차량 (Vehicle)
+// ============================================================
+
+model Vehicle {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  model     String   @db.VarChar(100)
+  color     String?  @db.VarChar(50)
+  plate     String   @db.VarChar(20)
+  capacity  Int      @default(4)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@map("vehicles")
+}
+
+// ============================================================
+// 카풀 운행 (Ride) — 같은 기업 내에서만 생성/매칭
+// ============================================================
+
+model Ride {
+  id              String       @id @default(uuid())
+  companyId       String       @map("company_id")
+  driverId        String       @map("driver_id")
+  departureLat    Decimal      @map("departure_lat") @db.Decimal(10, 7)
+  departureLng    Decimal      @map("departure_lng") @db.Decimal(10, 7)
+  departureAddr   String?      @map("departure_addr") @db.VarChar(255)
+  arrivalLat      Decimal      @map("arrival_lat") @db.Decimal(10, 7)
+  arrivalLng      Decimal      @map("arrival_lng") @db.Decimal(10, 7)
+  arrivalAddr     String?      @map("arrival_addr") @db.VarChar(255)
+  departureTime   DateTime     @map("departure_time")
+  availableSeats  Int          @map("available_seats")
+  fare            Int?
+  recurringDays   String?      @map("recurring_days") @db.VarChar(50)
+  recurringEnd    DateTime?    @map("recurring_end")
+  preferences     Json?
+  status          RideStatus   @default(OPEN)
+
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt      @map("updated_at")
+
+  // Relations
+  company         Company      @relation(fields: [companyId], references: [id])
+  driver          User         @relation("RideDriver", fields: [driverId], references: [id])
+  requests        RideRequest[]
+  reviews         Review[]
+  settlements     Settlement[]
+  chatRoom        ChatRoom?
+
+  @@map("rides")
+}
+
+// ============================================================
+// 카풀 요청 (RideRequest) — 같은 기업 내에서만 매칭
+// ============================================================
+
+model RideRequest {
+  id           String          @id @default(uuid())
+  rideId       String          @map("ride_id")
+  passengerId  String          @map("passenger_id")
+  pickupLat    Decimal?        @map("pickup_lat") @db.Decimal(10, 7)
+  pickupLng    Decimal?        @map("pickup_lng") @db.Decimal(10, 7)
+  pickupAddr   String?         @map("pickup_addr") @db.VarChar(255)
+  message      String?         @db.Text
+  status       RequestStatus   @default(PENDING)
+
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt      @map("updated_at")
+
+  // Relations
+  ride         Ride            @relation(fields: [rideId], references: [id])
+  passenger    User            @relation(fields: [passengerId], references: [id])
+
+  @@map("ride_requests")
+}
+
+// ============================================================
+// 리뷰 (Review)
+// ============================================================
+
+model Review {
+  id        String   @id @default(uuid())
+  rideId    String   @map("ride_id")
+  fromId    String   @map("from_id")
+  toId      String   @map("to_id")
+  rating    Int
+  comment   String?  @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ride      Ride     @relation(fields: [rideId], references: [id])
+  fromUser  User     @relation("ReviewFrom", fields: [fromId], references: [id])
+  toUser    User     @relation("ReviewTo", fields: [toId], references: [id])
+
+  @@map("reviews")
+}
+
+// ============================================================
+// 정산 (Settlement)
+// ============================================================
+
+model Settlement {
+  id           String            @id @default(uuid())
+  rideId       String            @map("ride_id")
+  passengerId  String            @map("passenger_id")
+  companyId    String?           @map("company_id")
+  amount       Int
+  driverAmount Int               @map("driver_amount")
+  companyFee   Int               @default(0) @map("company_fee")
+  passengerFee Int               @default(0) @map("passenger_fee")
+  platformFee  Int               @map("platform_fee")
+  status       SettlementStatus  @default(PENDING)
+  dueDate      DateTime?         @map("due_date")
+  paidAt       DateTime?         @map("paid_at")
+
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  ride         Ride              @relation(fields: [rideId], references: [id])
+  passenger    User              @relation(fields: [passengerId], references: [id])
+  company      Company?          @relation(fields: [companyId], references: [id])
+
+  @@map("settlements")
+}
+
+// ============================================================
+// 결제 수단 (PaymentMethod)
+// ============================================================
+
+model PaymentMethod {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String   @db.VarChar(30)
+  billingKey  String?  @map("billing_key") @db.VarChar(255)
+  alias       String?  @db.VarChar(50)
+  isDefault   Boolean  @default(false) @map("is_default")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("payment_methods")
+}
+
+// ============================================================
+// 채팅방 (ChatRoom)
+// ============================================================
+
+model ChatRoom {
+  id        String    @id @default(uuid())
+  rideId    String    @unique @map("ride_id")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  ride      Ride      @relation(fields: [rideId], references: [id])
+  messages  Message[]
+
+  @@map("chat_rooms")
+}
+
+// ============================================================
+// 메시지 (Message)
+// ============================================================
+
+model Message {
+  id        String      @id @default(uuid())
+  roomId    String      @map("room_id")
+  senderId  String      @map("sender_id")
+  content   String      @db.Text
+  type      MessageType @default(TEXT)
+
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  room      ChatRoom    @relation(fields: [roomId], references: [id])
+  sender    User        @relation(fields: [senderId], references: [id])
+
+  @@map("messages")
+}
