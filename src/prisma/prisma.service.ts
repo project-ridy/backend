@@ -1,0 +1,20 @@
+import { Injectable, OnModuleDestroy } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+
+const DEFAULT_DATABASE_URL = 'postgresql://localhost:5432/ridy';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleDestroy {
+  constructor() {
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL,
+    });
+
+    super({ adapter });
+  }
+
+  async onModuleDestroy(): Promise<void> {
+    await this.$disconnect();
+  }
+}
