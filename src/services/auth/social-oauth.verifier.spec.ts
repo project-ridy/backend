@@ -15,12 +15,6 @@ function jsonResponse(body: unknown, status = 200): Response {
   } as Response;
 }
 
-function appleIdToken(payload: Record<string, unknown>): string {
-  const header = Buffer.from(JSON.stringify({ alg: 'RS256', kid: 'test' })).toString('base64url');
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
-  return `${header}.${body}.signature`;
-}
-
 describe('MockableSocialOAuthVerifier', () => {
   const originalFetch = global.fetch;
   let fetchMock: FetchMock;
@@ -30,7 +24,6 @@ describe('MockableSocialOAuthVerifier', () => {
     fetchMock = jest.fn<ReturnType<typeof fetch>, Parameters<typeof fetch>>();
     global.fetch = fetchMock;
     verifier = new MockableSocialOAuthVerifier();
-    delete process.env.APPLE_CLIENT_ID;
   });
 
   afterEach(() => {
@@ -103,22 +96,10 @@ describe('MockableSocialOAuthVerifier', () => {
     });
   });
 
-  it('Apple identity token payload를 프로필로 변환한다', async () => {
-    const token = appleIdToken({
-      iss: 'https://appleid.apple.com',
-      sub: 'apple-sub-1',
-      email: 'apple@example.com',
-    });
-
-    const result = await verifier.verify('apple', token);
-
-    expect(result).toEqual({
-      provider: 'APPLE',
-      providerId: 'apple-sub-1',
-      email: 'apple@example.com',
-      name: 'apple',
-      imageUrl: null,
-    });
+  it('지원하지 않는 provider는 BadRequestException을 던진다', async () => {
+    await expect(verifier.verify('apple', 'some-token')).rejects.toThrow(
+      '지원하지 않는 로그인 방식입니다',
+    );
   });
 
   it('provider 검증 실패 응답은 UnauthorizedException으로 변환한다', async () => {

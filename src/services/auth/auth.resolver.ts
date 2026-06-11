@@ -5,21 +5,13 @@ import type {
   AuthPayload,
   JoinWithInviteCodeInput,
   LoginInput,
-  PhoneVerificationCodePayload,
-  PhoneVerificationPayload,
-  SendPhoneVerificationCodeInput,
   User,
-  VerifyPhoneCodeInput,
 } from '../../graphql/generated/schema-types';
 import { AuthService } from './auth.service';
-import { PhoneVerificationService } from './phone-verification.service';
 
 @Resolver('Auth')
 export class AuthResolver {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly phoneVerificationService: PhoneVerificationService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Mutation('login')
   async login(@Args('input') input: LoginInput): Promise<AuthPayload> {
@@ -34,22 +26,6 @@ export class AuthResolver {
   @Mutation('refreshToken')
   async refreshToken(@Args('token') token: string): Promise<AuthPayload> {
     return this.authService.refreshToken(token);
-  }
-
-  @Mutation('sendPhoneVerificationCode')
-  async sendPhoneVerificationCode(
-    @Args('input') input: SendPhoneVerificationCodeInput,
-    @Context() context: GraphQLContext,
-  ): Promise<PhoneVerificationCodePayload> {
-    return this.phoneVerificationService.sendVerificationCode(context.currentUser, input);
-  }
-
-  @Mutation('verifyPhoneCode')
-  async verifyPhoneCode(
-    @Args('input') input: VerifyPhoneCodeInput,
-    @Context() context: GraphQLContext,
-  ): Promise<PhoneVerificationPayload> {
-    return this.phoneVerificationService.verifyPhoneCode(context.currentUser, input);
   }
 
   @Query('me')
