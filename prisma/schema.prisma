@@ -65,7 +65,7 @@ model Company {
   id          String   @id @default(uuid())
   name        String   @db.VarChar(100)
   inviteCode  String   @unique @map("invite_code") @db.VarChar(20)
-  domain      String   @db.VarChar(100)
+  domain      String?  @db.VarChar(100)
   adminId     String   @unique @map("admin_id")
   maxMembers  Int      @default(50) @map("max_members")
   plan        Plan     @default(FREE)
@@ -128,17 +128,17 @@ model User {
   updatedAt     DateTime @updatedAt      @map("updated_at")
 
   // Relations
-  company            Company        @relation(fields: [companyId], references: [id])
-  vehicles           Vehicle[]
-  ridesAsDriver      Ride[]         @relation("RideDriver")
-  rideRequests       RideRequest[]
-  reviewsGiven       Review[]       @relation("ReviewFrom")
-  reviewsRecv        Review[]       @relation("ReviewTo")
-  payments           PaymentMethod[]
-  settlements        Settlement[]
-  createdInviteCodes InviteCode[]   @relation("InviteCodeCreator")
-  messages           Message[]
-  adminOf            Company?       @relation("CompanyAdmin")
+  company       Company        @relation(fields: [companyId], references: [id])
+  vehicles      Vehicle[]
+  ridesAsDriver Ride[]         @relation("RideDriver")
+  rideRequests  RideRequest[]
+  reviewsGiven  Review[]       @relation("ReviewFrom")
+  reviewsRecv   Review[]       @relation("ReviewTo")
+  payments      PaymentMethod[]
+  settlements   Settlement[]
+  createdInviteCodes InviteCode[] @relation("InviteCodeCreator")
+  messages     Message[]
+  adminOf       Company?       @relation("CompanyAdmin")
 
   @@unique([companyId, employeeId])
   @@map("users")
@@ -249,24 +249,24 @@ model Review {
 // ============================================================
 
 model Settlement {
-  id           String            @id @default(uuid())
-  rideId       String            @map("ride_id")
-  passengerId  String            @map("passenger_id")
-  companyId    String?           @map("company_id")
+  id           String           @id @default(uuid())
+  rideId       String           @map("ride_id")
+  passengerId  String           @map("passenger_id")
+  companyId    String?          @map("company_id")
   amount       Int
-  driverAmount Int               @map("driver_amount")
-  companyFee   Int               @default(0) @map("company_fee")
-  passengerFee Int               @default(0) @map("passenger_fee")
-  platformFee  Int               @map("platform_fee")
-  status       SettlementStatus  @default(PENDING)
-  dueDate      DateTime?         @map("due_date")
-  paidAt       DateTime?         @map("paid_at")
+  driverAmount Int              @map("driver_amount")
+  platformFee  Int              @map("platform_fee")
+  companyFee   Int              @default(0) @map("company_fee")
+  passengerFee Int              @default(0) @map("passenger_fee")
+  status       SettlementStatus @default(PENDING)
+  dueDate      DateTime?        @map("due_date")
+  paidAt       DateTime?        @map("paid_at")
 
-  createdAt    DateTime          @default(now()) @map("created_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
 
-  ride         Ride              @relation(fields: [rideId], references: [id])
-  passenger    User              @relation(fields: [passengerId], references: [id])
-  company      Company?          @relation(fields: [companyId], references: [id])
+  ride         Ride             @relation(fields: [rideId], references: [id])
+  passenger    User             @relation(fields: [passengerId], references: [id])
+  company      Company?         @relation(fields: [companyId], references: [id])
 
   @@map("settlements")
 }
@@ -311,16 +311,16 @@ model ChatRoom {
 // ============================================================
 
 model Message {
-  id        String      @id @default(uuid())
-  roomId    String      @map("room_id")
-  senderId  String      @map("sender_id")
-  content   String      @db.Text
+  id        String     @id @default(uuid())
+  roomId    String     @map("room_id")
+  senderId  String     @map("sender_id")
+  content   String     @db.Text
   type      MessageType @default(TEXT)
 
-  createdAt DateTime    @default(now()) @map("created_at")
+  createdAt DateTime   @default(now()) @map("created_at")
 
-  room      ChatRoom    @relation(fields: [roomId], references: [id])
-  sender    User        @relation(fields: [senderId], references: [id])
+  room      ChatRoom   @relation(fields: [roomId], references: [id])
+  sender    User       @relation(fields: [senderId], references: [id])
 
   @@map("messages")
 }
