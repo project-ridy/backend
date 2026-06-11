@@ -111,8 +111,34 @@ type User {
   rating: Float!
   rideCount: Int!
   company: Company
+  vehicles: [Vehicle!]!
   createdAt: DateTime!
   updatedAt: DateTime!
+}
+
+"""차량"""
+type Vehicle {
+  id: ID!
+  userId: ID!
+  model: String!
+  color: String
+  plate: String!
+  capacity: Int!
+  createdAt: DateTime!
+}
+
+input RegisterVehicleInput {
+  model: String!
+  color: String
+  plate: String!
+  capacity: Int = 4
+}
+
+input UpdateVehicleInput {
+  model: String
+  color: String
+  plate: String
+  capacity: Int
 }
 
 """회사 초대 코드"""
@@ -322,6 +348,7 @@ type Query {
   chatRooms(pagination: PaginationInput): [ChatRoom!]! @auth @companyScope
   messages(roomId: ID!, pagination: PaginationInput): MessageConnection @auth @companyScope
   calculateFare(input: CalculateFareInput!): FareCalculation @auth @companyScope
+  myVehicles: [Vehicle!]! @auth
   mySettlements(pagination: PaginationInput): [Settlement!]! @auth @companyScope
   companyUsageStat(period: String!): UsageStat @auth @adminOnly @companyScope
   companyEsgReport(period: String!): EsgReport @auth @adminOnly @companyScope
@@ -332,6 +359,15 @@ type Mutation {
   login(input: LoginInput!): AuthPayload
   refreshToken(token: String!): AuthPayload
   updateProfile(input: UpdateProfileInput!): User @auth
+
+  """차량을 등록합니다."""
+  registerVehicle(input: RegisterVehicleInput!): Vehicle @auth
+
+  """차량 정보를 수정합니다."""
+  updateVehicle(id: ID!, input: UpdateVehicleInput!): Vehicle @auth
+
+  """차량을 삭제합니다."""
+  deleteVehicle(id: ID!): Boolean @auth
 
   """현재 관리자의 회사에 초대 코드를 발급합니다."""
   generateInviteCode(input: GenerateInviteCodeInput!): InviteCode! @auth @adminOnly @companyScope

@@ -185,16 +185,22 @@ export type Mutation = {
   readonly createRide: Maybe<Ride>;
   /** 현재 관리자의 회사 초대 코드를 비활성화합니다. */
   readonly deactivateInviteCode: InviteCode;
+  /** 차량을 삭제합니다. */
+  readonly deleteVehicle: Maybe<Scalars['Boolean']['output']>;
   /** 현재 관리자의 회사에 초대 코드를 발급합니다. */
   readonly generateInviteCode: InviteCode;
   readonly joinWithInviteCode: Maybe<AuthPayload>;
   readonly login: Maybe<AuthPayload>;
   readonly paySettlement: Maybe<Settlement>;
   readonly refreshToken: Maybe<AuthPayload>;
+  /** 차량을 등록합니다. */
+  readonly registerVehicle: Maybe<Vehicle>;
   readonly rejectRideRequest: Maybe<RideRequest>;
   readonly requestRide: Maybe<RideRequest>;
   readonly updateProfile: Maybe<User>;
   readonly updateRide: Maybe<Ride>;
+  /** 차량 정보를 수정합니다. */
+  readonly updateVehicle: Maybe<Vehicle>;
 };
 
 
@@ -219,6 +225,11 @@ export type MutationCreateRideArgs = {
 
 
 export type MutationDeactivateInviteCodeArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationDeleteVehicleArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -249,6 +260,11 @@ export type MutationRefreshTokenArgs = {
 };
 
 
+export type MutationRegisterVehicleArgs = {
+  input: RegisterVehicleInput;
+};
+
+
 export type MutationRejectRideRequestArgs = {
   id: Scalars['ID']['input'];
 };
@@ -267,6 +283,12 @@ export type MutationUpdateProfileArgs = {
 export type MutationUpdateRideArgs = {
   id: Scalars['ID']['input'];
   input: CreateRideInput;
+};
+
+
+export type MutationUpdateVehicleArgs = {
+  id: Scalars['ID']['input'];
+  input: UpdateVehicleInput;
 };
 
 /** 페이지 정보 */
@@ -300,6 +322,7 @@ export type Query = {
   readonly myRideRequests: ReadonlyArray<RideRequest>;
   readonly myRides: Maybe<RideConnection>;
   readonly mySettlements: ReadonlyArray<Settlement>;
+  readonly myVehicles: ReadonlyArray<Vehicle>;
   readonly ride: Maybe<Ride>;
   readonly searchRides: Maybe<RideConnection>;
   /** 가입 전 초대 코드 유효성을 검증합니다. */
@@ -368,6 +391,13 @@ export type QuerySearchRidesArgs = {
 
 export type QueryValidateInviteCodeArgs = {
   code: Scalars['String']['input'];
+};
+
+export type RegisterVehicleInput = {
+  readonly capacity: InputMaybe<Scalars['Int']['input']>;
+  readonly color: InputMaybe<Scalars['String']['input']>;
+  readonly model: Scalars['String']['input'];
+  readonly plate: Scalars['String']['input'];
 };
 
 export type RequestRideInput = {
@@ -483,6 +513,13 @@ export type UpdateProfileInput = {
   readonly role: InputMaybe<Role>;
 };
 
+export type UpdateVehicleInput = {
+  readonly capacity: InputMaybe<Scalars['Int']['input']>;
+  readonly color: InputMaybe<Scalars['String']['input']>;
+  readonly model: InputMaybe<Scalars['String']['input']>;
+  readonly plate: InputMaybe<Scalars['String']['input']>;
+};
+
 export type UsageStat = {
   readonly __typename?: 'UsageStat';
   readonly activeUsers: Scalars['Int']['output'];
@@ -510,6 +547,19 @@ export type User = {
   readonly rideCount: Scalars['Int']['output'];
   readonly role: Role;
   readonly updatedAt: Scalars['DateTime']['output'];
+  readonly vehicles: ReadonlyArray<Vehicle>;
+};
+
+/** 차량 */
+export type Vehicle = {
+  readonly __typename?: 'Vehicle';
+  readonly capacity: Scalars['Int']['output'];
+  readonly color: Maybe<Scalars['String']['output']>;
+  readonly createdAt: Scalars['DateTime']['output'];
+  readonly id: Scalars['ID']['output'];
+  readonly model: Scalars['String']['output'];
+  readonly plate: Scalars['String']['output'];
+  readonly userId: Scalars['ID']['output'];
 };
 
 
@@ -615,6 +665,7 @@ export type ResolversTypes = {
   PageInfo: ResolverTypeWrapper<PageInfo>;
   PaginationInput: PaginationInput;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  RegisterVehicleInput: RegisterVehicleInput;
   RequestRideInput: RequestRideInput;
   RequestStatus: RequestStatus;
   Ride: ResolverTypeWrapper<Ride>;
@@ -627,8 +678,10 @@ export type ResolversTypes = {
   SettlementStatus: SettlementStatus;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateProfileInput: UpdateProfileInput;
+  UpdateVehicleInput: UpdateVehicleInput;
   UsageStat: ResolverTypeWrapper<UsageStat>;
   User: ResolverTypeWrapper<User>;
+  Vehicle: ResolverTypeWrapper<Vehicle>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -661,6 +714,7 @@ export type ResolversParentTypes = {
   PageInfo: PageInfo;
   PaginationInput: PaginationInput;
   Query: Record<PropertyKey, never>;
+  RegisterVehicleInput: RegisterVehicleInput;
   RequestRideInput: RequestRideInput;
   Ride: Ride;
   RideConnection: RideConnection;
@@ -669,8 +723,10 @@ export type ResolversParentTypes = {
   Settlement: Settlement;
   String: Scalars['String']['output'];
   UpdateProfileInput: UpdateProfileInput;
+  UpdateVehicleInput: UpdateVehicleInput;
   UsageStat: UsageStat;
   User: User;
+  Vehicle: Vehicle;
 };
 
 export type AdminOnlyDirectiveArgs = { };
@@ -789,15 +845,18 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   cancelRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationCancelRideRequestArgs, 'id'>>;
   createRide: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<MutationCreateRideArgs, 'input'>>;
   deactivateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<MutationDeactivateInviteCodeArgs, 'id'>>;
+  deleteVehicle: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteVehicleArgs, 'id'>>;
   generateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<MutationGenerateInviteCodeArgs, 'input'>>;
   joinWithInviteCode: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationJoinWithInviteCodeArgs, 'input'>>;
   login: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'input'>>;
   paySettlement: Resolver<Maybe<ResolversTypes['Settlement']>, ParentType, ContextType, RequireFields<MutationPaySettlementArgs, 'idempotencyKey' | 'settlementId'>>;
   refreshToken: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationRefreshTokenArgs, 'token'>>;
+  registerVehicle: Resolver<Maybe<ResolversTypes['Vehicle']>, ParentType, ContextType, RequireFields<MutationRegisterVehicleArgs, 'input'>>;
   rejectRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationRejectRideRequestArgs, 'id'>>;
   requestRide: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationRequestRideArgs, 'input'>>;
   updateProfile: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationUpdateProfileArgs, 'input'>>;
   updateRide: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<MutationUpdateRideArgs, 'id' | 'input'>>;
+  updateVehicle: Resolver<Maybe<ResolversTypes['Vehicle']>, ParentType, ContextType, RequireFields<MutationUpdateVehicleArgs, 'id' | 'input'>>;
 };
 
 export type PageInfoResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
@@ -819,6 +878,7 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   myRideRequests: Resolver<ReadonlyArray<ResolversTypes['RideRequest']>, ParentType, ContextType, QueryMyRideRequestsArgs>;
   myRides: Resolver<Maybe<ResolversTypes['RideConnection']>, ParentType, ContextType, QueryMyRidesArgs>;
   mySettlements: Resolver<ReadonlyArray<ResolversTypes['Settlement']>, ParentType, ContextType, QueryMySettlementsArgs>;
+  myVehicles: Resolver<ReadonlyArray<ResolversTypes['Vehicle']>, ParentType, ContextType>;
   ride: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<QueryRideArgs, 'id'>>;
   searchRides: Resolver<Maybe<ResolversTypes['RideConnection']>, ParentType, ContextType, RequireFields<QuerySearchRidesArgs, 'input'>>;
   validateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<QueryValidateInviteCodeArgs, 'code'>>;
@@ -897,6 +957,17 @@ export type UserResolvers<ContextType = GraphQLContext, ParentType extends Resol
   rideCount: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   role: Resolver<ResolversTypes['Role'], ParentType, ContextType>;
   updatedAt: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  vehicles: Resolver<ReadonlyArray<ResolversTypes['Vehicle']>, ParentType, ContextType>;
+};
+
+export type VehicleResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Vehicle'] = ResolversParentTypes['Vehicle']> = {
+  capacity: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  color: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  model: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  plate: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  userId: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = GraphQLContext> = {
@@ -923,6 +994,7 @@ export type Resolvers<ContextType = GraphQLContext> = {
   Settlement: SettlementResolvers<ContextType>;
   UsageStat: UsageStatResolvers<ContextType>;
   User: UserResolvers<ContextType>;
+  Vehicle: VehicleResolvers<ContextType>;
 };
 
 export type DirectiveResolvers<ContextType = GraphQLContext> = {
