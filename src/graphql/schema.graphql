@@ -155,24 +155,6 @@ input UpdateProfileInput {
   employeeId: String
 }
 
-input SendPhoneVerificationCodeInput {
-  phone: String!
-}
-
-input VerifyPhoneCodeInput {
-  phone: String!
-  code: String!
-}
-
-type PhoneVerificationCodePayload {
-  success: Boolean!
-  expiresInSeconds: Int!
-}
-
-type PhoneVerificationPayload {
-  success: Boolean!
-}
-
 type AuthPayload {
   accessToken: String!
   refreshToken: String!
@@ -351,12 +333,6 @@ type Mutation {
   login(input: LoginInput!): AuthPayload
   refreshToken(token: String!): AuthPayload
   updateProfile(input: UpdateProfileInput!): User @auth
-
-  """현재 로그인 사용자의 휴대폰 인증 코드를 발송합니다."""
-  sendPhoneVerificationCode(input: SendPhoneVerificationCodeInput!): PhoneVerificationCodePayload! @auth
-
-  """현재 로그인 사용자의 휴대폰 인증 코드를 검증합니다."""
-  verifyPhoneCode(input: VerifyPhoneCodeInput!): PhoneVerificationPayload! @auth
 
   """현재 관리자의 회사에 초대 코드를 발급합니다."""
   generateInviteCode(input: GenerateInviteCodeInput!): InviteCode! @auth @adminOnly @companyScope

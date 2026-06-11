@@ -19,7 +19,6 @@ enum Plan {
 enum Provider {
   KAKAO
   GOOGLE
-  APPLE
 }
 
 enum Role {
@@ -139,31 +138,10 @@ model User {
   settlements   Settlement[]
   createdInviteCodes InviteCode[] @relation("InviteCodeCreator")
   messages     Message[]
-  phoneVerificationCodes PhoneVerificationCode[]
   adminOf       Company?       @relation("CompanyAdmin")
 
   @@unique([companyId, employeeId])
   @@map("users")
-}
-
-// ============================================================
-// 휴대폰 인증 코드 (PhoneVerificationCode)
-// ============================================================
-
-model PhoneVerificationCode {
-  id         String    @id @default(uuid())
-  userId     String    @map("user_id")
-  phone      String    @db.VarChar(20)
-  code       String    @db.VarChar(6)
-  expiresAt  DateTime  @map("expires_at")
-  verifiedAt DateTime? @map("verified_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
-
-  user       User      @relation(fields: [userId], references: [id])
-
-  @@index([userId, phone, code, verifiedAt])
-  @@index([expiresAt])
-  @@map("phone_verification_codes")
 }
 
 // ============================================================

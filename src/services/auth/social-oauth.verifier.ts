@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 
-export const SUPPORTED_OAUTH_PROVIDERS = ['KAKAO', 'GOOGLE', 'APPLE'] as const;
+export const SUPPORTED_OAUTH_PROVIDERS = ['KAKAO', 'GOOGLE'] as const;
 export type OAuthProvider = (typeof SUPPORTED_OAUTH_PROVIDERS)[number];
 
 export type OAuthProfile = {
@@ -33,13 +33,6 @@ type GoogleTokenInfoResponse = {
   readonly picture?: string;
 };
 
-type AppleIdentityPayload = {
-  readonly iss?: string;
-  readonly aud?: string;
-  readonly sub?: string;
-  readonly email?: string;
-};
-
 @Injectable()
 export class MockableSocialOAuthVerifier implements SocialOAuthVerifier {
   async verify(provider: string, oauthToken: string): Promise<OAuthProfile> {
@@ -59,8 +52,6 @@ export class MockableSocialOAuthVerifier implements SocialOAuthVerifier {
         return verifyKakaoToken(token);
       case 'GOOGLE':
         return verifyGoogleToken(token);
-      case 'APPLE':
-        return verifyAppleIdentityToken(token);
     }
   }
 }
@@ -128,26 +119,6 @@ async function verifyGoogleToken(token: string): Promise<OAuthProfile> {
   };
 }
 
-function verifyAppleIdentityToken(token: string): OAuthProfile {
-  const payload = parseAppleIdentityPayload(token);
-  if (payload.iss !== 'https://appleid.apple.com' || !payload.sub || !payload.email) {
-    throw new UnauthorizedException('소셜 로그인에 실패했습니다');
-  }
-
-  const expectedAudience = process.env.APPLE_CLIENT_ID;
-  if (expectedAudience && payload.aud !== expectedAudience) {
-    throw new UnauthorizedException('소셜 로그인에 실패했습니다');
-  }
-
-  return {
-    provider: 'APPLE',
-    providerId: payload.sub,
-    email: payload.email,
-    name: payload.email.split('@')[0],
-    imageUrl: null,
-  };
-}
-
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
@@ -162,21 +133,6 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
 
   try {
     return (await response.json()) as T;
-  } catch {
-    throw new UnauthorizedException('소셜 로그인에 실패했습니다');
-  }
-}
-
-function parseAppleIdentityPayload(token: string): AppleIdentityPayload {
-  const [, encodedPayload] = token.split('.');
-  if (!encodedPayload) {
-    throw new UnauthorizedException('소셜 로그인에 실패했습니다');
-  }
-
-  try {
-    return JSON.parse(
-      Buffer.from(encodedPayload, 'base64url').toString('utf8'),
-    ) as AppleIdentityPayload;
   } catch {
     throw new UnauthorizedException('소셜 로그인에 실패했습니다');
   }
