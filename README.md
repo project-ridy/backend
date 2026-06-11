@@ -8,11 +8,32 @@
 |---|---|---|
 | NestJS | 11.x | API 프레임워크 |
 | TypeScript | 5.x | 타입 안전성 |
-| Prisma | 6.x | ORM |
+| GraphQL | 16.x | API 쿼리 언어 (schema-first) |
+| Apollo Server | 5.x | GraphQL 서버 |
+| Prisma | 7.x | ORM |
 | PostgreSQL | 16.x | 메인 DB |
 | Redis | 7.x | 캐시, 세션, Pub/Sub |
-| Socket.IO | 4.x | WebSocket 채팅 |
-| Bull | 4.x | 작업 큐 |
+
+## 아키텍처
+
+GraphQL Gateway 패턴 기반 MSA 구조. 단일 진입점 GraphQL Gateway가 도메인 서비스 모듈로 요청을 라우팅한다.
+
+```
+Client → GraphQL Gateway → Domain Service Modules
+                              ├── auth         (인증/인가)
+                              ├── company       (기업/초대코드)
+                              ├── matching      (카풀 매칭)
+                              ├── chat          (실시간 채팅)
+                              ├── payment       (정산/결제)
+                              ├── notification  (알림)
+                              └── analytics     (통계)
+```
+
+### 공통 인프라
+
+- **DomainEventBus** — 서비스 간 이벤트 통신 (InMemory 구현체, 운영 환경에서 Redis Pub/Sub으로 교체 예정)
+- **GraphQLContext** — 요청 컨텍스트에 인증 사용자 정보 주입
+- **AuthGuard** — `@auth` 디렉티브 기반 인증 보호
 
 ## 시작하기
 
@@ -42,25 +63,39 @@ npm run lint
 ```
 backend/
 ├── src/
-│   ├── modules/          # 기능 모듈
-│   │   ├── auth/         # 인증/인가
-│   │   ├── users/        # 유저 관리
-│   │   ├── matching/     # 카풀 매칭
-│   │   ├── chat/         # 실시간 채팅
-│   │   ├── payment/      # 정산/결제
-│   │   └── review/       # 평점/리뷰
-│   ├── common/           # 공통 유틸리티
-│   │   ├── guards/       # 인증 가드
-│   │   ├── filters/      # 예외 필터
-│   │   ├── interceptors/ # 인터셉터
-│   │   └── decorators/   # 커스텀 데코레이터
-│   ├── config/           # 환경 설정
-│   └── prisma/           # Prisma 서비스
+│   ├── main.ts                          # 애플리케이션 엔트리포인트
+│   ├── app/                             # 루트 AppModule
+│   ├── gateway/
+│   │   └── graphql/                     # GraphQL Gateway 모듈
+│   ├── services/                        # 도메인 서비스 (MSA 모듈)
+│   │   ├── auth/                        # 인증 (JWT, OAuth Kakao/Google)
+│   │   ├── company/                     # 기업 관리, 초대코드
+│   │   ├── matching/                    # 카풀 매칭
+│   │   ├── chat/                        # 실시간 채팅
+│   │   ├── payment/                     # 정산/결제
+│   │   ├── notification/                # 알림
+│   │   ├── analytics/                   # 통계
+│   │   └── health/                      # 헬스 체크
+│   ├── common/                          # 공통 인프라
+│   │   ├── context/                     # GraphQL 컨텍스트
+│   │   └── events/                      # 도메인 이벤트 버스
+│   ├── graphql/
+│   │   ├── schema.graphql               # 통합 GraphQL 스키마 (SSoT)
+│   │   └── generated/                   # Code Generator 산출물
+│   ├── prisma/                          # Prisma 서비스
+│   └── architecture/                    # 아키텍처 테스트
 ├── prisma/
-│   ├── schema.prisma     # DB 스키마
-│   └── migrations/       # 마이그레이션
-└── test/                 # 테스트
+│   ├── schema.prisma                    # DB 스키마
+│   └── migrations/                      # 마이그레이션
+└── test/                                # E2E 테스트
 ```
+
+## 인증
+
+- **소셜 로그인**: 카카오, 구글 (OAuth access token 검증)
+- **초대 코드 가입**: 기업 관리자가 발급한 초대 코드로 사원 가입
+- **JWT**: HS256 access/refresh 토큰 발급
+- **개발용 mock token**: `mock:<email>:<name>:<providerId>` 형식으로 OAuth 없이 테스트 가능
 
 ## API 문서
 
