@@ -10,11 +10,12 @@
 📍 프로젝트 보드: https://github.com/orgs/project-ridy/projects/1
 
 ```
-1. Project 이슈 할당 → 2. 이슈 In Progress → 3. 브랜치 생성 → 4. TDD 사이클 → 5. PR 생성 → 6. 이슈 Done
+1. Project 이슈 할당 → 2. 이슈 자신 어사인 → 3. 이슈 In Progress → 4. 브랜치 생성 → 5. TDD 사이클 → 6. PR 생성 → 7. 이슈 Done
 ```
 
 - **main 브랜치에 직접 커밋 금지** — 모든 변경은 PR로
 - **Project 이슈 없이 작업 금지** — 모든 작업은 Organization Project의 이슈에서 시작
+- **작업 시작 전 이슈에 자신을 어사인** — `gh issue edit <번호> --add-assignee @me`
 - **기능 작업 후 반드시 후속 테스트 이슈 진행** — 기능 PR 머지 후 Project에서 대응 테스트 이슈를 In Progress로 변경
 - **이슈 상태 관리**: 작업 시작 시 `In Progress`, PR 머지 후 `Done`으로 변경
 
