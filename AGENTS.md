@@ -81,11 +81,11 @@
 
 Closes #<이슈번호>
 ```
-- **subject는 반드시 한국어**로 작성 (예: `기능(auth): 로그인 리졸버 구현`)
+- **subject는 반드시 한국어**로 작성, **type은 영어** (예: `feat(auth): 로그인 리졸버 구현`, `docs(setup): 초기 셋업 가이드 추가`)
 - type: feat | fix | test | refactor | docs | chore | migrate
 
 ### PR 제목
-- **PR 제목도 반드시 한국어**로 작성 (예: `기능(auth): 로그인 리졸버 구현`)
+- **PR 제목도 동일한 형식** — type은 영어, subject는 한국어 (예: `feat(auth): 로그인 리졸버 구현`)
 - 커밋 메시지와 동일한 형식 사용
 
 ### 사용 스킬
