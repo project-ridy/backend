@@ -193,8 +193,12 @@ export type Mutation = {
   readonly refreshToken: Maybe<AuthPayload>;
   readonly rejectRideRequest: Maybe<RideRequest>;
   readonly requestRide: Maybe<RideRequest>;
+  /** 현재 로그인 사용자의 휴대폰 인증 코드를 발송합니다. */
+  readonly sendPhoneVerificationCode: PhoneVerificationCodePayload;
   readonly updateProfile: Maybe<User>;
   readonly updateRide: Maybe<Ride>;
+  /** 현재 로그인 사용자의 휴대폰 인증 코드를 검증합니다. */
+  readonly verifyPhoneCode: PhoneVerificationPayload;
 };
 
 
@@ -259,6 +263,11 @@ export type MutationRequestRideArgs = {
 };
 
 
+export type MutationSendPhoneVerificationCodeArgs = {
+  input: SendPhoneVerificationCodeInput;
+};
+
+
 export type MutationUpdateProfileArgs = {
   input: UpdateProfileInput;
 };
@@ -267,6 +276,11 @@ export type MutationUpdateProfileArgs = {
 export type MutationUpdateRideArgs = {
   id: Scalars['ID']['input'];
   input: CreateRideInput;
+};
+
+
+export type MutationVerifyPhoneCodeArgs = {
+  input: VerifyPhoneCodeInput;
 };
 
 /** 페이지 정보 */
@@ -279,6 +293,17 @@ export type PageInfo = {
 export type PaginationInput = {
   readonly after: InputMaybe<Scalars['String']['input']>;
   readonly first: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type PhoneVerificationCodePayload = {
+  readonly __typename?: 'PhoneVerificationCodePayload';
+  readonly expiresInSeconds: Scalars['Int']['output'];
+  readonly success: Scalars['Boolean']['output'];
+};
+
+export type PhoneVerificationPayload = {
+  readonly __typename?: 'PhoneVerificationPayload';
+  readonly success: Scalars['Boolean']['output'];
 };
 
 export type Query = {
@@ -452,6 +477,10 @@ export type SearchRidesInput = {
   readonly radiusKm: InputMaybe<Scalars['Float']['input']>;
 };
 
+export type SendPhoneVerificationCodeInput = {
+  readonly phone: Scalars['String']['input'];
+};
+
 export type Settlement = {
   readonly __typename?: 'Settlement';
   readonly amount: Scalars['Int']['output'];
@@ -511,6 +540,11 @@ export type User = {
   readonly rideCount: Scalars['Int']['output'];
   readonly role: Role;
   readonly updatedAt: Scalars['DateTime']['output'];
+};
+
+export type VerifyPhoneCodeInput = {
+  readonly code: Scalars['String']['input'];
+  readonly phone: Scalars['String']['input'];
 };
 
 
@@ -615,6 +649,8 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   PageInfo: ResolverTypeWrapper<PageInfo>;
   PaginationInput: PaginationInput;
+  PhoneVerificationCodePayload: ResolverTypeWrapper<PhoneVerificationCodePayload>;
+  PhoneVerificationPayload: ResolverTypeWrapper<PhoneVerificationPayload>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RequestRideInput: RequestRideInput;
   RequestStatus: RequestStatus;
@@ -624,12 +660,14 @@ export type ResolversTypes = {
   RideStatus: RideStatus;
   Role: Role;
   SearchRidesInput: SearchRidesInput;
+  SendPhoneVerificationCodeInput: SendPhoneVerificationCodeInput;
   Settlement: ResolverTypeWrapper<Settlement>;
   SettlementStatus: SettlementStatus;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   UpdateProfileInput: UpdateProfileInput;
   UsageStat: ResolverTypeWrapper<UsageStat>;
   User: ResolverTypeWrapper<User>;
+  VerifyPhoneCodeInput: VerifyPhoneCodeInput;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -661,17 +699,21 @@ export type ResolversParentTypes = {
   Mutation: Record<PropertyKey, never>;
   PageInfo: PageInfo;
   PaginationInput: PaginationInput;
+  PhoneVerificationCodePayload: PhoneVerificationCodePayload;
+  PhoneVerificationPayload: PhoneVerificationPayload;
   Query: Record<PropertyKey, never>;
   RequestRideInput: RequestRideInput;
   Ride: Ride;
   RideConnection: RideConnection;
   RideRequest: RideRequest;
   SearchRidesInput: SearchRidesInput;
+  SendPhoneVerificationCodeInput: SendPhoneVerificationCodeInput;
   Settlement: Settlement;
   String: Scalars['String']['output'];
   UpdateProfileInput: UpdateProfileInput;
   UsageStat: UsageStat;
   User: User;
+  VerifyPhoneCodeInput: VerifyPhoneCodeInput;
 };
 
 export type AdminOnlyDirectiveArgs = { };
@@ -797,13 +839,24 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   refreshToken: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationRefreshTokenArgs, 'token'>>;
   rejectRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationRejectRideRequestArgs, 'id'>>;
   requestRide: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationRequestRideArgs, 'input'>>;
+  sendPhoneVerificationCode: Resolver<ResolversTypes['PhoneVerificationCodePayload'], ParentType, ContextType, RequireFields<MutationSendPhoneVerificationCodeArgs, 'input'>>;
   updateProfile: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType, RequireFields<MutationUpdateProfileArgs, 'input'>>;
   updateRide: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<MutationUpdateRideArgs, 'id' | 'input'>>;
+  verifyPhoneCode: Resolver<ResolversTypes['PhoneVerificationPayload'], ParentType, ContextType, RequireFields<MutationVerifyPhoneCodeArgs, 'input'>>;
 };
 
 export type PageInfoResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
   endCursor: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   hasNextPage: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+};
+
+export type PhoneVerificationCodePayloadResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['PhoneVerificationCodePayload'] = ResolversParentTypes['PhoneVerificationCodePayload']> = {
+  expiresInSeconds: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  success: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+};
+
+export type PhoneVerificationPayloadResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['PhoneVerificationPayload'] = ResolversParentTypes['PhoneVerificationPayload']> = {
+  success: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
@@ -918,6 +971,8 @@ export type Resolvers<ContextType = GraphQLContext> = {
   MessageConnection: MessageConnectionResolvers<ContextType>;
   Mutation: MutationResolvers<ContextType>;
   PageInfo: PageInfoResolvers<ContextType>;
+  PhoneVerificationCodePayload: PhoneVerificationCodePayloadResolvers<ContextType>;
+  PhoneVerificationPayload: PhoneVerificationPayloadResolvers<ContextType>;
   Query: QueryResolvers<ContextType>;
   Ride: RideResolvers<ContextType>;
   RideConnection: RideConnectionResolvers<ContextType>;
