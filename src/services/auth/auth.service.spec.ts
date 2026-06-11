@@ -71,7 +71,6 @@ const user = {
   role: 'PASSENGER',
   rating: 0,
   rideCount: 0,
-  phoneVerified: false,
   company,
   createdAt: now,
   updatedAt: now,
