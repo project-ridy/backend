@@ -1,16 +1,14 @@
 import { Query, Resolver } from '@nestjs/graphql';
 
-import { HealthResponseDto } from './dto/health-response.dto';
+import type { Health } from '../../graphql/generated/schema-types';
 import { HealthService } from './health.service';
 
-@Resolver(() => HealthResponseDto)
+@Resolver('Health')
 export class HealthResolver {
   constructor(private readonly healthService: HealthService) {}
 
-  @Query(() => HealthResponseDto, {
-    description: 'Ridy 백엔드 서비스 상태를 확인합니다.',
-  })
-  health(): HealthResponseDto {
+  @Query('health')
+  health(): Health {
     return this.healthService.getHealth();
   }
 }

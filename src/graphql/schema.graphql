@@ -1,0 +1,13 @@
+"""Ridy 백엔드 서비스 상태"""
+type Health {
+  """서비스 가용 상태"""
+  status: String!
+
+  """서비스 식별자"""
+  service: String!
+}
+
+type Query {
+  """Ridy 백엔드 서비스 상태를 확인합니다."""
+  health: Health!
+}

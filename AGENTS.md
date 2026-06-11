@@ -35,17 +35,21 @@
 - docs에 정의되지 않은 API/스키마는 임의로 추가하지 않음 — Orchestrator에 BLOCKED 보고
 
 ### 기술 스택 준수
-- **NestJS 11.x** — 모듈/컨트롤러/서비스 구조, thin controller 원칙
-- **Prisma 6.x** — 싱글톤 PrismaService, `@map`/`@@map` 네이밍 규칙
-- **TypeScript 5.x** — `any` 금지, DTO로 요청/응답 타입 정의, `enum` 대신 `as const`
-- **class-validator** — DTO 입력 검증, `@ApiProperty()`로 문서화
-- **Jest + Supertest** — 유닛/통합/E2E 테스트
+- **최신 안정 버전 우선** — 작업 시작 전 `npm outdated`로 확인하고, 특별한 호환성 이슈가 없으면 latest 사용
+- **NestJS 11.x + GraphQL** — REST 컨트롤러가 아닌 GraphQL Resolver 중심 구조
+- **GraphQL schema-first** — 기능 구현 전 `src/graphql/schema.graphql`에 SDL 스키마를 먼저 작성
+- **GraphQL Code Generator 필수** — 스키마 작성 후 `npm run codegen`으로 generated 타입을 만든 뒤 Resolver/Service 구현
+- **Prisma 7.x** — `prisma.config.ts` + adapter 방식 사용, schema 파일에 datasource URL 작성 금지
+- **TypeScript 6.x** — `any` 금지, generated 타입 우선, `enum` 대신 `as const`
+- **class-validator** — GraphQL input 검증이 필요한 경우 명시적 Input 타입과 함께 사용
+- **Jest + Supertest** — 유닛/GraphQL E2E 테스트
 
-### NestJS 컨벤션
-- 모듈 구조: `module-name/module-name.{module,controller,service}.ts` + `dto/` + `guards/`
-- 컨트롤러: 비즈니스 로직 금지, 서비스에 위임
+### NestJS / GraphQL 컨벤션
+- 모듈 구조: `module-name/module-name.{module,resolver,service}.ts` + 필요 시 `dto/`, `guards/`
+- Resolver: GraphQL entrypoint만 담당, 비즈니스 로직은 서비스에 위임
+- Schema-first: Resolver/Input/Object 타입을 만들기 전에 `src/graphql/schema.graphql`을 먼저 수정
+- Generated 타입: `src/graphql/generated/schema-types.ts`를 import하여 Resolver 반환/인자 타입에 사용
 - 서비스: Prisma는 주입받아 사용, `new PrismaClient()` 직접 생성 금지
-- DTO: `class-validator` + `class-transformer`, `partial` 대신 명시적 필드
 - 트랜잭션: `prisma.$transaction` 사용
 
 ### Prisma 컨벤션
@@ -57,8 +61,8 @@
 
 ### 테스트 컨벤션
 - 서비스 테스트: 비즈니스 로직에 집중, Prisma는 모킹
-- 컨트롤러 테스트: HTTP 레이어 검증
-- E2E: Supertest + 테스트 DB, `beforeEach`에서 데이터 초기화
+- GraphQL E2E: Supertest로 `POST /graphql` 요청 검증
+- E2E: 테스트 DB가 필요한 경우 `beforeEach`에서 데이터 초기화
 - `describe/it` 구조, 설명은 한국어
 
 ### 코딩 컨벤션
@@ -66,9 +70,9 @@
 - 클래스: PascalCase
 - 메서드/변수: camelCase
 - 상수: UPPER_SNAKE_CASE
-- DTO: PascalCase + 접미사 (`LoginRequestDto`, `AuthResponseDto`)
-- 파일명: kebab-case (`auth.service.ts`, `login-request.dto.ts`)
-- 테스트: 대상.spec.ts (`auth.service.spec.ts`)
+- DTO/GraphQL 타입: PascalCase + 의미 있는 접미사 (`LoginInput`, `AuthPayload`)
+- 파일명: kebab-case (`auth.resolver.ts`, `auth.service.ts`)
+- 테스트: 대상.spec.ts (`auth.service.spec.ts`, `auth.e2e-spec.ts`)
 
 ### 커밋 메시지
 ```
@@ -87,6 +91,8 @@ type: feat | fix | test | refactor | docs | chore | migrate
 - [ ] `npm run lint` 에러 없는가?
 - [ ] `npm run test` 전체 통과하는가?
 - [ ] TypeScript 타입 에러 없는가?
-- [ ] API 스펙(docs/api/)을 준수했는가?
-- [ ] DB 스키마 변경 시 마이그레이션을 포함했는가?
+- [ ] API 스펙(docs/api/)과 `src/graphql/schema.graphql`을 준수했는가?
+- [ ] GraphQL 작업 시 스키마를 먼저 수정하고 `npm run codegen`을 실행했는가?
+- [ ] Resolver/클라이언트 코드가 generated 타입을 사용하는가?
+- [ ] DB 스키마 변경 시 Prisma 7 방식의 config/migration을 포함했는가?
 - [ ] 기능 작업인 경우 후속 테스트 이슈를 In Progress로 변경했는가?

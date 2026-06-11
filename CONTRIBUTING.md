@@ -28,7 +28,7 @@ Backend Developer 에이전트는 다음 스킬을 로드 후 작업합니다:
 | `tdd` | TDD Red→Green→Refactor 사이클 강제 |
 | `typescript-expert` | 타입 안전성, 제네릭 패턴, 유틸리티 타입 |
 | `database-optimizer` | 쿼리 최적화, 인덱싱, N+1 문제 방지 |
-| `api-design-reviewer` | REST API 설계 리뷰, 일관성 검증 |
+| `api-design-reviewer` | GraphQL 스키마/API 설계 리뷰, 일관성 검증 |
 | `code-review-expert` | PR 셀프 리뷰 |
 
 ### TDD (필수)
@@ -71,9 +71,9 @@ backend/
 │   ├── modules/              # 기능 모듈
 │   │   ├── auth/             # 인증/인가
 │   │   │   ├── auth.module.ts
-│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.resolver.ts
 │   │   │   ├── auth.service.ts
-│   │   │   ├── auth.controller.spec.ts
+│   │   │   ├── auth.e2e-spec.ts
 │   │   │   ├── auth.service.spec.ts
 │   │   │   ├── guards/       # 인증 가드
 │   │   │   ├── strategies/   # Passport 전략
@@ -123,7 +123,8 @@ backend/
 
 ### TypeScript
 
-- **`any` 사용 금지** — 모든 값은 명시적 타입
+- **Generated 타입 사용** — GraphQL 요청/응답 타입은 `src/graphql/schema.graphql`에서 `npm run codegen`으로 생성
+- **`any` 사용 금지** — 생성 파일을 제외한 모든 값은 명시적 타입
 - **DTO로 요청/응답 타입 정의** — 컨트롤러 파라미터에 인라인 타입 금지
 - **`enum` 대신 `as const` 객체** 사용 (Prisma enum은 예외)
 - **null 보다 undefined** — TypeScript 관례 준수

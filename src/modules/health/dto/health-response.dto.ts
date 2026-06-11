@@ -1,10 +1,3 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import type { Health } from '../../../graphql/generated/schema-types';
 
-@ObjectType('Health')
-export class HealthResponseDto {
-  @Field(() => String)
-  status!: 'ok';
-
-  @Field(() => String)
-  service!: 'ridy-backend';
-}
+export type HealthResponseDto = Health;
