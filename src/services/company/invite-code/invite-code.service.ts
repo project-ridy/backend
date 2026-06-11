@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -34,7 +35,9 @@ const inviteCodeInclude = {
 
 @Injectable()
 export class InviteCodeService {
-  constructor(private readonly prisma: PrismaService | Prisma.TransactionClient) {}
+  constructor(
+    @Inject(PrismaService) private readonly prisma: PrismaService | Prisma.TransactionClient,
+  ) {}
 
   async generateInviteCode(currentUser: CurrentUser | undefined, input: GenerateInviteCodeInput) {
     const admin = this.assertAdmin(currentUser);
