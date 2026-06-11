@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
-import type { CurrentUser } from '../../graphql/context';
-import { PrismaService } from '../../prisma/prisma.service';
+import type { CurrentUser } from '../../../common/context/graphql-context';
+import { PrismaService } from '../../../prisma/prisma.service';
 
 const MAX_ACTIVE_INVITE_CODES = 10;
 const DEFAULT_MAX_USES = 10;

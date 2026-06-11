@@ -1,4 +1,9 @@
 scalar DateTime
+scalar JSON
+
+directive @auth on FIELD_DEFINITION
+directive @adminOnly on FIELD_DEFINITION
+directive @companyScope on FIELD_DEFINITION
 
 """회사 요금제"""
 enum CompanyPlan {
@@ -15,6 +20,38 @@ enum Role {
   ADMIN
 }
 
+"""카풀 상태"""
+enum RideStatus {
+  OPEN
+  MATCHED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+"""카풀 요청 상태"""
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+"""메시지 타입"""
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+"""정산 상태"""
+enum SettlementStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
 """Ridy 백엔드 서비스 상태"""
 type Health {
   """서비스 가용 상태"""
@@ -22,6 +59,28 @@ type Health {
 
   """서비스 식별자"""
   service: String!
+}
+
+"""페이지 정보"""
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+
+input PaginationInput {
+  first: Int = 20
+  after: String
+}
+
+"""위경도 좌표"""
+type LatLng {
+  lat: Float!
+  lng: Float!
+}
+
+input LatLngInput {
+  lat: Float!
+  lng: Float!
 }
 
 """기업 단위 카풀 격리 단위"""
@@ -40,7 +99,7 @@ type Company {
 """사용자"""
 type User {
   id: ID!
-  companyId: String!
+  companyId: ID!
   employeeId: String
   email: String!
   name: String!
@@ -52,6 +111,7 @@ type User {
   rating: Float!
   rideCount: Int!
   phoneVerified: Boolean!
+  company: Company
   createdAt: DateTime!
   updatedAt: DateTime!
 }
@@ -59,9 +119,9 @@ type User {
 """회사 초대 코드"""
 type InviteCode {
   id: ID!
-  companyId: String!
+  companyId: ID!
   code: String!
-  createdBy: String!
+  createdBy: ID!
   maxUses: Int!
   currentUses: Int!
   expiresAt: DateTime
@@ -75,21 +135,217 @@ input GenerateInviteCodeInput {
   expiresAt: DateTime
 }
 
+input JoinWithInviteCodeInput {
+  inviteCode: String!
+  provider: String!
+  oauthToken: String!
+  employeeId: String
+}
+
+input LoginInput {
+  provider: String!
+  oauthToken: String!
+}
+
+input UpdateProfileInput {
+  name: String
+  phone: String
+  imageUrl: String
+  role: Role
+  employeeId: String
+}
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+  user: User!
+}
+
+type InviteCodeConnection {
+  nodes: [InviteCode!]!
+  pageInfo: PageInfo!
+}
+
+type MemberConnection {
+  nodes: [User!]!
+  pageInfo: PageInfo!
+}
+
+type Ride {
+  id: ID!
+  companyId: ID!
+  driver: User!
+  departure: LatLng!
+  departureAddr: String
+  arrival: LatLng!
+  arrivalAddr: String
+  departureTime: DateTime!
+  availableSeats: Int!
+  fare: Int
+  preferences: JSON
+  status: RideStatus!
+  requests: [RideRequest!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type RideRequest {
+  id: ID!
+  ride: Ride!
+  passenger: User!
+  pickup: LatLng
+  pickupAddr: String
+  message: String
+  status: RequestStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CreateRideInput {
+  departure: LatLngInput!
+  departureAddr: String
+  arrival: LatLngInput!
+  arrivalAddr: String
+  departureTime: DateTime!
+  availableSeats: Int!
+  fare: Int
+  preferences: JSON
+}
+
+input SearchRidesInput {
+  departure: LatLngInput!
+  arrival: LatLngInput!
+  departureTime: DateTime!
+  passengers: Int = 1
+  radiusKm: Float = 5.0
+}
+
+input RequestRideInput {
+  rideId: ID!
+  pickup: LatLngInput
+  pickupAddr: String
+  message: String
+}
+
+type RideConnection {
+  nodes: [Ride!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ChatRoom {
+  id: ID!
+  ride: Ride!
+  lastMessage: Message
+  unreadCount: Int!
+  createdAt: DateTime!
+}
+
+type Message {
+  id: ID!
+  roomId: ID!
+  sender: User!
+  type: MessageType!
+  content: String!
+  createdAt: DateTime!
+}
+
+type MessageConnection {
+  nodes: [Message!]!
+  pageInfo: PageInfo!
+}
+
+type FareCalculation {
+  distanceKm: Float!
+  baseFare: Int!
+  platformFee: Int!
+  companySubsidy: Int!
+  passengerAmount: Int!
+  driverAmount: Int!
+}
+
+type Settlement {
+  id: ID!
+  ride: Ride!
+  passenger: User!
+  amount: Int!
+  driverAmount: Int!
+  platformFee: Int!
+  status: SettlementStatus!
+  dueDate: DateTime
+  paidAt: DateTime
+  createdAt: DateTime!
+}
+
+type UsageStat {
+  period: String!
+  totalRides: Int!
+  totalUsers: Int!
+  activeUsers: Int!
+  totalDistanceKm: Float!
+}
+
+type EsgReport {
+  period: String!
+  totalRides: Int!
+  totalDistanceKm: Float!
+  co2SavedKg: Float!
+  participantCount: Int!
+}
+
+input CalculateFareInput {
+  departure: LatLngInput!
+  arrival: LatLngInput!
+  passengers: Int = 1
+}
+
 type Query {
   """Ridy 백엔드 서비스 상태를 확인합니다."""
   health: Health!
+
+  """현재 로그인 사용자를 조회합니다."""
+  me: User @auth
+
+  """현재 사용자의 회사를 조회합니다."""
+  myCompany: Company @auth @companyScope
 
   """가입 전 초대 코드 유효성을 검증합니다."""
   validateInviteCode(code: String!): InviteCode!
 
   """현재 관리자의 회사 초대 코드 목록을 조회합니다."""
-  inviteCodes: [InviteCode!]!
+  inviteCodes: [InviteCode!]! @auth @adminOnly @companyScope
+
+  companyMembers(pagination: PaginationInput): MemberConnection @auth @adminOnly @companyScope
+  searchRides(input: SearchRidesInput!, pagination: PaginationInput): RideConnection @auth @companyScope
+  ride(id: ID!): Ride @auth @companyScope
+  myRides(status: RideStatus, pagination: PaginationInput): RideConnection @auth @companyScope
+  myRideRequests(status: RequestStatus, pagination: PaginationInput): [RideRequest!]! @auth @companyScope
+  chatRooms(pagination: PaginationInput): [ChatRoom!]! @auth @companyScope
+  messages(roomId: ID!, pagination: PaginationInput): MessageConnection @auth @companyScope
+  calculateFare(input: CalculateFareInput!): FareCalculation @auth @companyScope
+  mySettlements(pagination: PaginationInput): [Settlement!]! @auth @companyScope
+  companyUsageStat(period: String!): UsageStat @auth @adminOnly @companyScope
+  companyEsgReport(period: String!): EsgReport @auth @adminOnly @companyScope
 }
 
 type Mutation {
+  joinWithInviteCode(input: JoinWithInviteCodeInput!): AuthPayload
+  login(input: LoginInput!): AuthPayload
+  refreshToken(token: String!): AuthPayload
+  updateProfile(input: UpdateProfileInput!): User @auth
+
   """현재 관리자의 회사에 초대 코드를 발급합니다."""
-  generateInviteCode(input: GenerateInviteCodeInput!): InviteCode!
+  generateInviteCode(input: GenerateInviteCodeInput!): InviteCode! @auth @adminOnly @companyScope
 
   """현재 관리자의 회사 초대 코드를 비활성화합니다."""
-  deactivateInviteCode(id: ID!): InviteCode!
+  deactivateInviteCode(id: ID!): InviteCode! @auth @adminOnly @companyScope
+
+  createRide(input: CreateRideInput!): Ride @auth @companyScope
+  updateRide(id: ID!, input: CreateRideInput!): Ride @auth @companyScope
+  cancelRide(id: ID!): Ride @auth @companyScope
+  requestRide(input: RequestRideInput!): RideRequest @auth @companyScope
+  acceptRideRequest(id: ID!): RideRequest @auth @companyScope
+  rejectRideRequest(id: ID!): RideRequest @auth @companyScope
+  cancelRideRequest(id: ID!): RideRequest @auth @companyScope
+  paySettlement(settlementId: ID!, idempotencyKey: String!): Settlement @auth @companyScope
 }

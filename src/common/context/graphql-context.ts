@@ -5,5 +5,7 @@ export type CurrentUser = {
 };
 
 export type GraphQLContext = {
+  readonly requestId: string;
   readonly currentUser?: CurrentUser;
+  readonly authToken: string | null;
 };
