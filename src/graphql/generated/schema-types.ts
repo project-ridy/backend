@@ -504,7 +504,6 @@ export type User = {
   readonly imageUrl: Maybe<Scalars['String']['output']>;
   readonly name: Scalars['String']['output'];
   readonly phone: Maybe<Scalars['String']['output']>;
-  readonly phoneVerified: Scalars['Boolean']['output'];
   readonly provider: Maybe<Scalars['String']['output']>;
   readonly providerId: Maybe<Scalars['String']['output']>;
   readonly rating: Scalars['Float']['output'];
@@ -892,7 +891,6 @@ export type UserResolvers<ContextType = GraphQLContext, ParentType extends Resol
   imageUrl: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   name: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   phone: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  phoneVerified: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   provider: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   providerId: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   rating: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
