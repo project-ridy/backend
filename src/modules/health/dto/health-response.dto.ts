@@ -1,4 +1,10 @@
-export type HealthResponseDto = {
-  status: 'ok';
-  service: 'ridy-backend';
-};
+import { Field, ObjectType } from '@nestjs/graphql';
+
+@ObjectType('Health')
+export class HealthResponseDto {
+  @Field(() => String)
+  status!: 'ok';
+
+  @Field(() => String)
+  service!: 'ridy-backend';
+}
