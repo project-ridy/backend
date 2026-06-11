@@ -6,7 +6,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import type { Company, InviteCode, User } from '@prisma/client';
+import type { Company, InviteCode, User, Vehicle } from '@prisma/client';
 
 import type {
   AuthPayload,
@@ -22,7 +22,10 @@ import type { OAuthProfile, SocialOAuthVerifier } from './social-oauth.verifier'
 
 type CompanyWithCount = Company & { readonly _count: { readonly users: number } };
 type InviteCodeWithCompany = InviteCode & { readonly company: CompanyWithCount };
-type UserWithCompany = User & { readonly company: CompanyWithCount };
+type UserWithCompany = User & {
+  readonly company: CompanyWithCount;
+  readonly vehicles: Vehicle[];
+};
 
 type UserDelegate = {
   findFirst(args: object): Promise<UserWithCompany | null>;
@@ -56,6 +59,7 @@ const USER_INCLUDE = {
       },
     },
   },
+  vehicles: true,
 } as const;
 
 const INVITE_CODE_INCLUDE = {
@@ -224,6 +228,7 @@ function toGraphQLUser(user: UserWithCompany): GraphQLUser {
   return {
     ...user,
     rating: Number(user.rating),
+    vehicles: user.vehicles ?? [],
     company: toGraphQLCompany(user.company),
   };
 }
