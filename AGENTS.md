@@ -12,10 +12,11 @@
 1. 모든 작업은 **GitHub Organization Project**의 이슈에서 시작 — https://github.com/orgs/project-ridy/projects/1
 2. 작업 시작 전 **이슈에 자신을 어사인** (`gh issue edit <번호> --add-assignee @me`)
 3. 이슈를 `In Progress`로 변경 후 작업 시작
-4. 브랜치 생성: `<type>/<이슈번호>-<설명>` (feat, fix, test, refactor)
-5. PR 생성 후 머지, 이슈를 `Done`으로 변경
-6. main 브랜치에 직접 커밋 금지
-7. 기능 작업 후 대응 테스트 이슈를 반드시 이어서 진행
+4. **기획서 확인** — `docs/plans/`의 해당 기획서를 읽고 코드 구조, 예외 처리, 테스트 시나리오를 파악
+5. 브랜치 생성: `<type>/<이슈번호>-<설명>` (feat, fix, test, refactor)
+6. PR 생성 후 머지, 이슈를 `Done`으로 변경
+7. main 브랜치에 직접 커밋 금지
+8. 기능 작업 후 대응 테스트 이슈를 반드시 이어서 진행
 
 ### TDD (절대 불변)
 모든 기능/버그 수정은 **Red → Green → Refactor** 사이클을 따른다:
