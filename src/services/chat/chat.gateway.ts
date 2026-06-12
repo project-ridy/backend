@@ -11,6 +11,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
 
@@ -74,7 +75,11 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() payload: RoomPayload,
   ): Promise<Ack> {
     const currentUser = this.currentUser(socket);
-    await this.chatService.ensureRoomParticipant(currentUser, payload.roomId);
+    try {
+      await this.chatService.ensureRoomParticipant(currentUser, payload.roomId);
+    } catch (error) {
+      throw new WsException(errorMessage(error));
+    }
     await socket.join(roomName(payload.roomId));
 
     return { ok: true };
@@ -99,7 +104,12 @@ export class ChatGateway implements OnGatewayConnection {
     this.validateMessagePayload(payload);
     this.assertRateLimit(socket.id);
 
-    const message = await this.chatService.createMessage(currentUser, payload);
+    let message: Message;
+    try {
+      message = await this.chatService.createMessage(currentUser, payload);
+    } catch (error) {
+      throw new WsException(errorMessage(error));
+    }
     this.server.to(roomName(payload.roomId)).emit('chat:messageCreated', message);
 
     return { ok: true, message };
@@ -154,4 +164,8 @@ export class ChatGateway implements OnGatewayConnection {
 
 function roomName(roomId: string): string {
   return `${ROOM_PREFIX}${roomId}`;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : '채팅 요청에 실패했습니다';
 }
