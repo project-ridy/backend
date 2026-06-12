@@ -185,6 +185,7 @@ export type Mutation = {
   readonly createRide: Maybe<Ride>;
   /** 현재 관리자의 회사 초대 코드를 비활성화합니다. */
   readonly deactivateInviteCode: InviteCode;
+  readonly deletePaymentMethod: Maybe<Scalars['Boolean']['output']>;
   /** 차량을 삭제합니다. */
   readonly deleteVehicle: Maybe<Scalars['Boolean']['output']>;
   /** 현재 관리자의 회사에 초대 코드를 발급합니다. */
@@ -193,6 +194,7 @@ export type Mutation = {
   readonly login: Maybe<AuthPayload>;
   readonly paySettlement: Maybe<Settlement>;
   readonly refreshToken: Maybe<AuthPayload>;
+  readonly registerPaymentMethod: Maybe<PaymentMethod>;
   /** 차량을 등록합니다. */
   readonly registerVehicle: Maybe<Vehicle>;
   readonly rejectRideRequest: Maybe<RideRequest>;
@@ -229,6 +231,11 @@ export type MutationDeactivateInviteCodeArgs = {
 };
 
 
+export type MutationDeletePaymentMethodArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteVehicleArgs = {
   id: Scalars['ID']['input'];
 };
@@ -257,6 +264,11 @@ export type MutationPaySettlementArgs = {
 
 export type MutationRefreshTokenArgs = {
   token: Scalars['String']['input'];
+};
+
+
+export type MutationRegisterPaymentMethodArgs = {
+  input: RegisterPaymentMethodInput;
 };
 
 
@@ -303,6 +315,23 @@ export type PaginationInput = {
   readonly first: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type PaymentMethod = {
+  readonly __typename?: 'PaymentMethod';
+  readonly alias: Maybe<Scalars['String']['output']>;
+  readonly createdAt: Scalars['DateTime']['output'];
+  readonly id: Scalars['ID']['output'];
+  readonly isDefault: Scalars['Boolean']['output'];
+  readonly type: PaymentType;
+};
+
+/** 결제수단 타입 */
+export const PaymentType = {
+  Card: 'CARD',
+  KakaoPay: 'KAKAO_PAY',
+  TossPay: 'TOSS_PAY'
+} as const;
+
+export type PaymentType = typeof PaymentType[keyof typeof PaymentType];
 export type Query = {
   readonly __typename?: 'Query';
   readonly calculateFare: Maybe<FareCalculation>;
@@ -319,12 +348,14 @@ export type Query = {
   readonly messages: Maybe<MessageConnection>;
   /** 현재 사용자의 회사를 조회합니다. */
   readonly myCompany: Maybe<Company>;
+  readonly myPaymentMethods: ReadonlyArray<PaymentMethod>;
   readonly myRideRequests: ReadonlyArray<RideRequest>;
   readonly myRides: Maybe<RideConnection>;
   readonly mySettlements: ReadonlyArray<Settlement>;
   readonly myVehicles: ReadonlyArray<Vehicle>;
   readonly ride: Maybe<Ride>;
   readonly searchRides: Maybe<RideConnection>;
+  readonly settlementDetail: Maybe<Settlement>;
   /** 가입 전 초대 코드 유효성을 검증합니다. */
   readonly validateInviteCode: InviteCode;
 };
@@ -389,8 +420,20 @@ export type QuerySearchRidesArgs = {
 };
 
 
+export type QuerySettlementDetailArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type QueryValidateInviteCodeArgs = {
   code: Scalars['String']['input'];
+};
+
+export type RegisterPaymentMethodInput = {
+  readonly alias: InputMaybe<Scalars['String']['input']>;
+  readonly billingKey: Scalars['String']['input'];
+  readonly isDefault: InputMaybe<Scalars['Boolean']['input']>;
+  readonly type: PaymentType;
 };
 
 export type RegisterVehicleInput = {
@@ -485,12 +528,14 @@ export type SearchRidesInput = {
 export type Settlement = {
   readonly __typename?: 'Settlement';
   readonly amount: Scalars['Int']['output'];
+  readonly companyFee: Scalars['Int']['output'];
   readonly createdAt: Scalars['DateTime']['output'];
   readonly driverAmount: Scalars['Int']['output'];
   readonly dueDate: Maybe<Scalars['DateTime']['output']>;
   readonly id: Scalars['ID']['output'];
   readonly paidAt: Maybe<Scalars['DateTime']['output']>;
   readonly passenger: User;
+  readonly passengerFee: Scalars['Int']['output'];
   readonly platformFee: Scalars['Int']['output'];
   readonly ride: Ride;
   readonly status: SettlementStatus;
@@ -664,7 +709,10 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   PageInfo: ResolverTypeWrapper<PageInfo>;
   PaginationInput: PaginationInput;
+  PaymentMethod: ResolverTypeWrapper<PaymentMethod>;
+  PaymentType: PaymentType;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  RegisterPaymentMethodInput: RegisterPaymentMethodInput;
   RegisterVehicleInput: RegisterVehicleInput;
   RequestRideInput: RequestRideInput;
   RequestStatus: RequestStatus;
@@ -713,7 +761,9 @@ export type ResolversParentTypes = {
   Mutation: Record<PropertyKey, never>;
   PageInfo: PageInfo;
   PaginationInput: PaginationInput;
+  PaymentMethod: PaymentMethod;
   Query: Record<PropertyKey, never>;
+  RegisterPaymentMethodInput: RegisterPaymentMethodInput;
   RegisterVehicleInput: RegisterVehicleInput;
   RequestRideInput: RequestRideInput;
   Ride: Ride;
@@ -845,12 +895,14 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   cancelRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationCancelRideRequestArgs, 'id'>>;
   createRide: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<MutationCreateRideArgs, 'input'>>;
   deactivateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<MutationDeactivateInviteCodeArgs, 'id'>>;
+  deletePaymentMethod: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeletePaymentMethodArgs, 'id'>>;
   deleteVehicle: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeleteVehicleArgs, 'id'>>;
   generateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<MutationGenerateInviteCodeArgs, 'input'>>;
   joinWithInviteCode: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationJoinWithInviteCodeArgs, 'input'>>;
   login: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationLoginArgs, 'input'>>;
   paySettlement: Resolver<Maybe<ResolversTypes['Settlement']>, ParentType, ContextType, RequireFields<MutationPaySettlementArgs, 'idempotencyKey' | 'settlementId'>>;
   refreshToken: Resolver<Maybe<ResolversTypes['AuthPayload']>, ParentType, ContextType, RequireFields<MutationRefreshTokenArgs, 'token'>>;
+  registerPaymentMethod: Resolver<Maybe<ResolversTypes['PaymentMethod']>, ParentType, ContextType, RequireFields<MutationRegisterPaymentMethodArgs, 'input'>>;
   registerVehicle: Resolver<Maybe<ResolversTypes['Vehicle']>, ParentType, ContextType, RequireFields<MutationRegisterVehicleArgs, 'input'>>;
   rejectRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationRejectRideRequestArgs, 'id'>>;
   requestRide: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationRequestRideArgs, 'input'>>;
@@ -864,6 +916,14 @@ export type PageInfoResolvers<ContextType = GraphQLContext, ParentType extends R
   hasNextPage: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 };
 
+export type PaymentMethodResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['PaymentMethod'] = ResolversParentTypes['PaymentMethod']> = {
+  alias: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  id: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  isDefault: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  type: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   calculateFare: Resolver<Maybe<ResolversTypes['FareCalculation']>, ParentType, ContextType, RequireFields<QueryCalculateFareArgs, 'input'>>;
   chatRooms: Resolver<ReadonlyArray<ResolversTypes['ChatRoom']>, ParentType, ContextType, QueryChatRoomsArgs>;
@@ -875,12 +935,14 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   me: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
   messages: Resolver<Maybe<ResolversTypes['MessageConnection']>, ParentType, ContextType, RequireFields<QueryMessagesArgs, 'roomId'>>;
   myCompany: Resolver<Maybe<ResolversTypes['Company']>, ParentType, ContextType>;
+  myPaymentMethods: Resolver<ReadonlyArray<ResolversTypes['PaymentMethod']>, ParentType, ContextType>;
   myRideRequests: Resolver<ReadonlyArray<ResolversTypes['RideRequest']>, ParentType, ContextType, QueryMyRideRequestsArgs>;
   myRides: Resolver<Maybe<ResolversTypes['RideConnection']>, ParentType, ContextType, QueryMyRidesArgs>;
   mySettlements: Resolver<ReadonlyArray<ResolversTypes['Settlement']>, ParentType, ContextType, QueryMySettlementsArgs>;
   myVehicles: Resolver<ReadonlyArray<ResolversTypes['Vehicle']>, ParentType, ContextType>;
   ride: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<QueryRideArgs, 'id'>>;
   searchRides: Resolver<Maybe<ResolversTypes['RideConnection']>, ParentType, ContextType, RequireFields<QuerySearchRidesArgs, 'input'>>;
+  settlementDetail: Resolver<Maybe<ResolversTypes['Settlement']>, ParentType, ContextType, RequireFields<QuerySettlementDetailArgs, 'id'>>;
   validateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<QueryValidateInviteCodeArgs, 'code'>>;
 };
 
@@ -922,12 +984,14 @@ export type RideRequestResolvers<ContextType = GraphQLContext, ParentType extend
 
 export type SettlementResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Settlement'] = ResolversParentTypes['Settlement']> = {
   amount: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  companyFee: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   createdAt: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
   driverAmount: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   dueDate: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   id: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   paidAt: Resolver<Maybe<ResolversTypes['DateTime']>, ParentType, ContextType>;
   passenger: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  passengerFee: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   platformFee: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   ride: Resolver<ResolversTypes['Ride'], ParentType, ContextType>;
   status: Resolver<ResolversTypes['SettlementStatus'], ParentType, ContextType>;
@@ -987,6 +1051,7 @@ export type Resolvers<ContextType = GraphQLContext> = {
   MessageConnection: MessageConnectionResolvers<ContextType>;
   Mutation: MutationResolvers<ContextType>;
   PageInfo: PageInfoResolvers<ContextType>;
+  PaymentMethod: PaymentMethodResolvers<ContextType>;
   Query: QueryResolvers<ContextType>;
   Ride: RideResolvers<ContextType>;
   RideConnection: RideConnectionResolvers<ContextType>;
