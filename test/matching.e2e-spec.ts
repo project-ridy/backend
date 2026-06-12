@@ -58,6 +58,9 @@ type MockPrismaService = {
     readonly findMany: jest.Mock;
     readonly update: jest.Mock;
   };
+  readonly chatRoom: {
+    readonly upsert: jest.Mock;
+  };
   readonly $transaction: jest.Mock;
   readonly $connect: jest.Mock;
   readonly $disconnect: jest.Mock;
@@ -205,6 +208,9 @@ function createMockPrisma(): MockPrismaService {
       findMany: jest.fn().mockResolvedValue([rideRequest]),
       update: jest.fn().mockResolvedValue({ ...rideRequest, status: 'ACCEPTED' }),
     },
+    chatRoom: {
+      upsert: jest.fn().mockResolvedValue({ id: 'room-1', rideId: 'ride-1', createdAt: now }),
+    },
     $transaction: jest.fn(),
     $connect: jest.fn().mockResolvedValue(undefined),
     $disconnect: jest.fn().mockResolvedValue(undefined),
@@ -250,6 +256,11 @@ describe('매칭 API GraphQL (e2e)', () => {
     mockPrisma.rideRequest.findUnique.mockResolvedValue(rideRequest);
     mockPrisma.rideRequest.create.mockResolvedValue(rideRequest);
     mockPrisma.rideRequest.update.mockResolvedValue({ ...rideRequest, status: 'ACCEPTED' });
+    mockPrisma.chatRoom.upsert.mockResolvedValue({
+      id: 'room-1',
+      rideId: 'ride-1',
+      createdAt: now,
+    });
   });
 
   it('차주 토큰으로 카풀을 생성한다', async () => {
