@@ -52,6 +52,13 @@ enum SettlementStatus {
   CANCELLED
 }
 
+"""결제수단 타입"""
+enum PaymentType {
+  CARD
+  KAKAO_PAY
+  TOSS_PAY
+}
+
 """Ridy 백엔드 서비스 상태"""
 type Health {
   """서비스 가용 상태"""
@@ -296,9 +303,19 @@ type Settlement {
   amount: Int!
   driverAmount: Int!
   platformFee: Int!
+  companyFee: Int!
+  passengerFee: Int!
   status: SettlementStatus!
   dueDate: DateTime
   paidAt: DateTime
+  createdAt: DateTime!
+}
+
+type PaymentMethod {
+  id: ID!
+  type: PaymentType!
+  alias: String
+  isDefault: Boolean!
   createdAt: DateTime!
 }
 
@@ -322,6 +339,13 @@ input CalculateFareInput {
   departure: LatLngInput!
   arrival: LatLngInput!
   passengers: Int = 1
+}
+
+input RegisterPaymentMethodInput {
+  type: PaymentType!
+  billingKey: String!
+  alias: String
+  isDefault: Boolean = false
 }
 
 type Query {
@@ -350,6 +374,8 @@ type Query {
   calculateFare(input: CalculateFareInput!): FareCalculation @auth @companyScope
   myVehicles: [Vehicle!]! @auth
   mySettlements(pagination: PaginationInput): [Settlement!]! @auth @companyScope
+  settlementDetail(id: ID!): Settlement @auth @companyScope
+  myPaymentMethods: [PaymentMethod!]! @auth
   companyUsageStat(period: String!): UsageStat @auth @adminOnly @companyScope
   companyEsgReport(period: String!): EsgReport @auth @adminOnly @companyScope
 }
@@ -383,4 +409,6 @@ type Mutation {
   rejectRideRequest(id: ID!): RideRequest @auth @companyScope
   cancelRideRequest(id: ID!): RideRequest @auth @companyScope
   paySettlement(settlementId: ID!, idempotencyKey: String!): Settlement @auth @companyScope
+  registerPaymentMethod(input: RegisterPaymentMethodInput!): PaymentMethod @auth
+  deletePaymentMethod(id: ID!): Boolean @auth
 }
