@@ -29,6 +29,9 @@ type MockPrisma = {
     findUnique: jest.Mock;
     update: jest.Mock;
   };
+  chatRoom: {
+    upsert: jest.Mock;
+  };
   $transaction: jest.Mock;
 };
 
@@ -146,6 +149,9 @@ describe('MatchingService', () => {
         findMany: jest.fn(),
         findUnique: jest.fn(),
         update: jest.fn(),
+      },
+      chatRoom: {
+        upsert: jest.fn(),
       },
       $transaction: jest.fn(async (callback: (tx: MockPrisma) => Promise<unknown>) =>
         callback(prisma),
@@ -404,6 +410,7 @@ describe('MatchingService', () => {
       prisma.rideRequest.findUnique.mockResolvedValue(prismaRequest);
       prisma.rideRequest.update.mockResolvedValue({ ...prismaRequest, status: 'ACCEPTED' });
       prisma.ride.update.mockResolvedValue({ ...prismaRide, availableSeats: 2 });
+      prisma.chatRoom.upsert.mockResolvedValue({ id: 'room-1', rideId: 'ride-1', createdAt: now });
 
       const result = await service.acceptRideRequest(driverUser, 'request-1');
 
@@ -414,6 +421,11 @@ describe('MatchingService', () => {
           data: { availableSeats: { decrement: 1 } },
         }),
       );
+      expect(prisma.chatRoom.upsert).toHaveBeenCalledWith({
+        where: { rideId: 'ride-1' },
+        create: { rideId: 'ride-1' },
+        update: {},
+      });
     });
 
     it('남은 좌석이 없으면 요청을 수락할 수 없다', async () => {

@@ -320,6 +320,11 @@ export class MatchingService {
         where: { id: request.rideId },
         data: { availableSeats: { decrement: 1 } },
       });
+      await tx.chatRoom.upsert({
+        where: { rideId: request.rideId },
+        create: { rideId: request.rideId },
+        update: {},
+      });
 
       return this.mapRideRequest(accepted);
     });
