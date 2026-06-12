@@ -1,0 +1,5 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "default_agent": "ridy-backend-developer",
+  "instructions": ["AGENTS.md", "rules.md", "../docs/WORKFLOW.md"]
+}

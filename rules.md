@@ -8,7 +8,7 @@
 
 ### 타입 시스템
 - **`any` 사용 금지** — 모든 값은 명시적 타입
-- **DTO로 요청/응답 타입 정의** — 컨트롤러 파라미터에 인라인 타입 금지
+- **GraphQL generated 타입 우선** — Resolver 인자/반환 타입은 `src/graphql/generated/schema-types.ts` 기준
 - **`enum` 대신 `as const` 객체** — Prisma enum은 예외
 - **`null` 대신 `undefined`** — TypeScript 관례 준수
 - **유니온 타입 적극 활용** — 상태, 역할 등 제한된 값 집합
@@ -60,21 +60,15 @@ interface PaginatedResponse<T> extends ApiResponse<T[]> {
 
 ### 모듈 구조
 
-각 기능 모듈은 다음 구조를 따른다:
+각 기능 모듈은 GraphQL Gateway 중심의 bounded context 구조를 따른다:
 
 ```
-src/modules/<module-name>/
-├── <module-name>.module.ts
-├── <module-name>.controller.ts
-├── <module-name>.service.ts
-├── <module-name>.controller.spec.ts
-├── <module-name>.service.spec.ts
-├── dto/
-│   ├── create-<module-name>.dto.ts
-│   ├── update-<module-name>.dto.ts
-│   └── <module-name>-response.dto.ts
+src/services/<domain>/
+├── <domain>-service.module.ts
+├── <domain>.resolver.ts
+├── <domain>.service.ts
+├── <domain>.service.spec.ts
 ├── guards/          # 모듈 전용 가드 (필요 시)
-├── strategies/      # Passport 전략 (필요 시)
 └── helpers/         # 모듈 내 유틸리티 (필요 시)
 ```
 
@@ -85,48 +79,42 @@ src/modules/<module-name>/
   imports: [
     // 외부 모듈 — PrismaModule 등
   ],
-  controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthResolver, AuthService],
   exports: [AuthService], // 다른 모듈에서 사용 시
 })
-export class AuthModule {}
+export class AuthServiceModule {}
 ```
 
 - **순환 의존 금지** — 모듈 간 순환 참조 시 구조 재설계
 - **exports는 최소화** — 외부에 노출할 서비스만 export
 
-### 컨트롤러
+### Resolver
 
-- **thin controller** — 비즈니스 로직은 서비스에 위임
-- **DTO로 입력 검증** — `class-validator` 데코레이터
-- **명시적 응답 타입** — `@ApiResponse()` 데코레이터
-- **HTTP 상태 코드 명시** — `@HttpCode()` 사용
+- **thin resolver** — 비즈니스 로직은 서비스에 위임
+- **Schema-first** — Resolver/Input/Object 타입 작성 전에 `src/graphql/schema.graphql` 수정
+- **Codegen 필수** — SDL 변경 후 `npm run codegen` 실행
+- **Generated 타입 사용** — Resolver 인자/반환 타입은 generated 타입을 import
 
 ```typescript
-@Controller('auth')
-@ApiTags('Auth')
-export class AuthController {
+@Resolver()
+export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: '소셜 로그인' })
-  @ApiResponse({ status: 200, type: AuthResponseDto })
-  @ApiResponse({ status: 401, description: '유효하지 않은 토큰' })
-  async login(@Body() loginDto: LoginRequestDto): Promise<AuthResponseDto> {
-    return this.authService.login(loginDto);
+  @Mutation('login')
+  async login(@Args('input') input: LoginInput): Promise<AuthPayload> {
+    return this.authService.login(input);
   }
 }
 ```
 
 **금지사항:**
-- 컨트롤러에 비즈니스 로직 작성
-- DTO 없이 원시 타입 파라미터
-- `@Res()` 직접 사용 (NestJS 추상화 우회)
+- Resolver에 비즈니스 로직 작성
+- `src/graphql/schema.graphql` 없이 Resolver 필드 추가
+- generated 파일 수동 수정
 
 ### 서비스
 
-- **비즈니스 로직은 서비스에만** — 컨트롤러에 로직 금지
+- **비즈니스 로직은 서비스에만** — Resolver에 로직 금지
 - **Prisma는 주입받아 사용** — `new PrismaClient()` 직접 생성 금지
 - **트랜잭션은 `prisma.$transaction`** — 여러 테이블 변경 시
 - **에러는 커스텀 예외** — `NotFoundException`, `ForbiddenException` 등
@@ -177,35 +165,24 @@ export class MatchingService {
 }
 ```
 
-### DTO
+### GraphQL Input/Type
 
-- **class-validator + class-transformer** 로 검증
-- **명시적 필드** — `PartialType` 대신 업데이트 DTO도 필드 명시
-- **Swagger 데코레이터** — `@ApiProperty()` 로 API 문서화
-- **변환 데코레이터** — `@Type()` 으로 타입 변환
+- **SDL 우선** — 입력/응답 계약은 `src/graphql/schema.graphql`에 먼저 정의
+- **Generated 타입 우선** — `npm run codegen` 산출물을 Resolver와 Service 경계에서 사용
+- **명시적 필드** — GraphQL input/type에는 필드를 명확히 선언
+- **검증 필요 시 class-validator 사용** — GraphQL input을 서비스 경계에서 검증
 
 ```typescript
-export class LoginRequestDto {
-  @ApiProperty({ enum: ['kakao', 'google', 'apple'], description: '소셜 로그인 제공자' })
-  @IsEnum(['kakao', 'google', 'apple'])
-  provider: 'kakao' | 'google' | 'apple';
+type LoginInput = {
+  provider: string;
+  oauthToken: string;
+};
 
-  @ApiProperty({ description: '소셜 액세스 토큰' })
-  @IsString()
-  @IsNotEmpty()
+type AuthPayload = {
   accessToken: string;
-}
-
-export class AuthResponseDto {
-  @ApiProperty()
-  accessToken: string;
-
-  @ApiProperty()
   refreshToken: string;
-
-  @ApiProperty()
-  user: UserResponseDto;
-}
+  user: User;
+};
 ```
 
 ### 가드 & 미들웨어
@@ -501,7 +478,7 @@ describe('Auth API (e2e)', () => {
 |---|---|---|
 | 모듈 디렉토리 | kebab-case | `auth/`, `matching/`, `ride-request/` |
 | 모듈 파일 | `<이름>.module.ts` | `auth.module.ts` |
-| 컨트롤러 | `<이름>.controller.ts` | `auth.controller.ts` |
+| Resolver | `<이름>.resolver.ts` | `auth.resolver.ts` |
 | 서비스 | `<이름>.service.ts` | `auth.service.ts` |
 | 가드 | `<이름>.guard.ts` | `jwt-auth.guard.ts` |
 | 인터셉터 | `<이름>.interceptor.ts` | `logging.interceptor.ts` |
@@ -532,7 +509,7 @@ Closes #<이슈번호>
 | fix | 버그 수정 | `fix(matching): 만석 체크 누락 수정` |
 | test | 테스트 | `test(auth): 로그인 API 유닛 테스트` |
 | refactor | 리팩토링 | `refactor(chat): 게이트웨이 로직 분리` |
-| docs | 문서 | `docs(auth): Swagger 설명 추가` |
+| docs | 문서 | `docs(auth): GraphQL 스키마 설명 추가` |
 | chore | 빌드/설정 | `chore: ESLint 규칙 업데이트` |
 | migrate | DB 마이그레이션 | `migrate: ride_requests 테이블 추가` |
 
