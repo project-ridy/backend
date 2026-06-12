@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Optional,
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 
@@ -52,6 +53,7 @@ type PrismaExecutor = PrismaService | Prisma.TransactionClient;
 export class MatchingService {
   constructor(
     private readonly prisma: PrismaService,
+    @Optional()
     private readonly nowProvider: () => Date = () => new Date(),
   ) {}
 
