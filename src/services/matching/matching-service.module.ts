@@ -1,4 +1,10 @@
 import { Module } from '@nestjs/common';
 
-@Module({})
+import { MatchingResolver } from './matching.resolver';
+import { MatchingService } from './matching.service';
+
+@Module({
+  providers: [MatchingResolver, MatchingService],
+  exports: [MatchingService],
+})
 export class MatchingServiceModule {}
