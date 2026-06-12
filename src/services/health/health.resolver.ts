@@ -8,7 +8,7 @@ export class HealthResolver {
   constructor(private readonly healthService: HealthService) {}
 
   @Query('health')
-  health(): Health {
+  async health(): Promise<Health> {
     return this.healthService.getHealth();
   }
 }

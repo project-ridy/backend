@@ -59,6 +59,13 @@ enum PaymentType {
   TOSS_PAY
 }
 
+"""내부 의존성 상태"""
+type DependencyHealth {
+  status: String!
+  latencyMs: Int
+  message: String
+}
+
 """Ridy 백엔드 서비스 상태"""
 type Health {
   """서비스 가용 상태"""
@@ -66,6 +73,11 @@ type Health {
 
   """서비스 식별자"""
   service: String!
+
+  database: DependencyHealth!
+  redis: DependencyHealth!
+  uptimeSec: Int!
+  timestamp: DateTime!
 }
 
 """페이지 정보"""
