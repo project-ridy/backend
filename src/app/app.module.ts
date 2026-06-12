@@ -12,6 +12,7 @@ import { HealthModule } from '../services/health/health.module';
 import { MatchingServiceModule } from '../services/matching/matching-service.module';
 import { NotificationServiceModule } from '../services/notification/notification-service.module';
 import { PaymentServiceModule } from '../services/payment/payment-service.module';
+import { ReviewServiceModule } from '../services/review/review-service.module';
 import { UserModule } from '../services/user/user.module';
 
 @Module({
@@ -27,6 +28,7 @@ import { UserModule } from '../services/user/user.module';
     MatchingServiceModule,
     ChatServiceModule,
     PaymentServiceModule,
+    ReviewServiceModule,
     AnalyticsServiceModule,
     NotificationServiceModule,
     UserModule,

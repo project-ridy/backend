@@ -58,6 +58,13 @@ export const CompanyPlan = {
 } as const;
 
 export type CompanyPlan = typeof CompanyPlan[keyof typeof CompanyPlan];
+export type CreateReviewInput = {
+  readonly comment: InputMaybe<Scalars['String']['input']>;
+  readonly rating: Scalars['Int']['input'];
+  readonly rideId: Scalars['ID']['input'];
+  readonly toUserId: Scalars['ID']['input'];
+};
+
 export type CreateRideInput = {
   readonly arrival: LatLngInput;
   readonly arrivalAddr: InputMaybe<Scalars['String']['input']>;
@@ -182,6 +189,7 @@ export type Mutation = {
   readonly acceptRideRequest: Maybe<RideRequest>;
   readonly cancelRide: Maybe<Ride>;
   readonly cancelRideRequest: Maybe<RideRequest>;
+  readonly createReview: Maybe<Review>;
   readonly createRide: Maybe<Ride>;
   /** 현재 관리자의 회사 초대 코드를 비활성화합니다. */
   readonly deactivateInviteCode: InviteCode;
@@ -218,6 +226,11 @@ export type MutationCancelRideArgs = {
 
 export type MutationCancelRideRequestArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type MutationCreateReviewArgs = {
+  input: CreateReviewInput;
 };
 
 
@@ -354,8 +367,10 @@ export type Query = {
   readonly mySettlements: ReadonlyArray<Settlement>;
   readonly myVehicles: ReadonlyArray<Vehicle>;
   readonly ride: Maybe<Ride>;
+  readonly rideReviews: ReadonlyArray<Review>;
   readonly searchRides: Maybe<RideConnection>;
   readonly settlementDetail: Maybe<Settlement>;
+  readonly userReviews: ReadonlyArray<Review>;
   /** 가입 전 초대 코드 유효성을 검증합니다. */
   readonly validateInviteCode: InviteCode;
 };
@@ -414,6 +429,11 @@ export type QueryRideArgs = {
 };
 
 
+export type QueryRideReviewsArgs = {
+  rideId: Scalars['ID']['input'];
+};
+
+
 export type QuerySearchRidesArgs = {
   input: SearchRidesInput;
   pagination: InputMaybe<PaginationInput>;
@@ -422,6 +442,12 @@ export type QuerySearchRidesArgs = {
 
 export type QuerySettlementDetailArgs = {
   id: Scalars['ID']['input'];
+};
+
+
+export type QueryUserReviewsArgs = {
+  pagination: InputMaybe<PaginationInput>;
+  userId: Scalars['ID']['input'];
 };
 
 
@@ -459,6 +485,17 @@ export const RequestStatus = {
 } as const;
 
 export type RequestStatus = typeof RequestStatus[keyof typeof RequestStatus];
+export type Review = {
+  readonly __typename?: 'Review';
+  readonly comment: Maybe<Scalars['String']['output']>;
+  readonly createdAt: Scalars['DateTime']['output'];
+  readonly fromUser: User;
+  readonly id: Scalars['ID']['output'];
+  readonly rating: Scalars['Int']['output'];
+  readonly ride: Ride;
+  readonly toUser: User;
+};
+
 export type Ride = {
   readonly __typename?: 'Ride';
   readonly arrival: LatLng;
@@ -686,6 +723,7 @@ export type ResolversTypes = {
   ChatRoom: ResolverTypeWrapper<ChatRoom>;
   Company: ResolverTypeWrapper<Company>;
   CompanyPlan: CompanyPlan;
+  CreateReviewInput: CreateReviewInput;
   CreateRideInput: CreateRideInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
   EsgReport: ResolverTypeWrapper<EsgReport>;
@@ -716,6 +754,7 @@ export type ResolversTypes = {
   RegisterVehicleInput: RegisterVehicleInput;
   RequestRideInput: RequestRideInput;
   RequestStatus: RequestStatus;
+  Review: ResolverTypeWrapper<Review>;
   Ride: ResolverTypeWrapper<Ride>;
   RideConnection: ResolverTypeWrapper<RideConnection>;
   RideRequest: ResolverTypeWrapper<RideRequest>;
@@ -739,6 +778,7 @@ export type ResolversParentTypes = {
   CalculateFareInput: CalculateFareInput;
   ChatRoom: ChatRoom;
   Company: Company;
+  CreateReviewInput: CreateReviewInput;
   CreateRideInput: CreateRideInput;
   DateTime: Scalars['DateTime']['output'];
   EsgReport: EsgReport;
@@ -766,6 +806,7 @@ export type ResolversParentTypes = {
   RegisterPaymentMethodInput: RegisterPaymentMethodInput;
   RegisterVehicleInput: RegisterVehicleInput;
   RequestRideInput: RequestRideInput;
+  Review: Review;
   Ride: Ride;
   RideConnection: RideConnection;
   RideRequest: RideRequest;
@@ -893,6 +934,7 @@ export type MutationResolvers<ContextType = GraphQLContext, ParentType extends R
   acceptRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationAcceptRideRequestArgs, 'id'>>;
   cancelRide: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<MutationCancelRideArgs, 'id'>>;
   cancelRideRequest: Resolver<Maybe<ResolversTypes['RideRequest']>, ParentType, ContextType, RequireFields<MutationCancelRideRequestArgs, 'id'>>;
+  createReview: Resolver<Maybe<ResolversTypes['Review']>, ParentType, ContextType, RequireFields<MutationCreateReviewArgs, 'input'>>;
   createRide: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<MutationCreateRideArgs, 'input'>>;
   deactivateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<MutationDeactivateInviteCodeArgs, 'id'>>;
   deletePaymentMethod: Resolver<Maybe<ResolversTypes['Boolean']>, ParentType, ContextType, RequireFields<MutationDeletePaymentMethodArgs, 'id'>>;
@@ -941,9 +983,21 @@ export type QueryResolvers<ContextType = GraphQLContext, ParentType extends Reso
   mySettlements: Resolver<ReadonlyArray<ResolversTypes['Settlement']>, ParentType, ContextType, QueryMySettlementsArgs>;
   myVehicles: Resolver<ReadonlyArray<ResolversTypes['Vehicle']>, ParentType, ContextType>;
   ride: Resolver<Maybe<ResolversTypes['Ride']>, ParentType, ContextType, RequireFields<QueryRideArgs, 'id'>>;
+  rideReviews: Resolver<ReadonlyArray<ResolversTypes['Review']>, ParentType, ContextType, RequireFields<QueryRideReviewsArgs, 'rideId'>>;
   searchRides: Resolver<Maybe<ResolversTypes['RideConnection']>, ParentType, ContextType, RequireFields<QuerySearchRidesArgs, 'input'>>;
   settlementDetail: Resolver<Maybe<ResolversTypes['Settlement']>, ParentType, ContextType, RequireFields<QuerySettlementDetailArgs, 'id'>>;
+  userReviews: Resolver<ReadonlyArray<ResolversTypes['Review']>, ParentType, ContextType, RequireFields<QueryUserReviewsArgs, 'userId'>>;
   validateInviteCode: Resolver<ResolversTypes['InviteCode'], ParentType, ContextType, RequireFields<QueryValidateInviteCodeArgs, 'code'>>;
+};
+
+export type ReviewResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Review'] = ResolversParentTypes['Review']> = {
+  comment: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  createdAt: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  fromUser: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  id: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  rating: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  ride: Resolver<ResolversTypes['Ride'], ParentType, ContextType>;
+  toUser: Resolver<ResolversTypes['User'], ParentType, ContextType>;
 };
 
 export type RideResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Ride'] = ResolversParentTypes['Ride']> = {
@@ -1053,6 +1107,7 @@ export type Resolvers<ContextType = GraphQLContext> = {
   PageInfo: PageInfoResolvers<ContextType>;
   PaymentMethod: PaymentMethodResolvers<ContextType>;
   Query: QueryResolvers<ContextType>;
+  Review: ReviewResolvers<ContextType>;
   Ride: RideResolvers<ContextType>;
   RideConnection: RideConnectionResolvers<ContextType>;
   RideRequest: RideRequestResolvers<ContextType>;

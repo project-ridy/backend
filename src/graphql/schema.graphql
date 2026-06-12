@@ -233,6 +233,16 @@ type RideRequest {
   updatedAt: DateTime!
 }
 
+type Review {
+  id: ID!
+  ride: Ride!
+  fromUser: User!
+  toUser: User!
+  rating: Int!
+  comment: String
+  createdAt: DateTime!
+}
+
 input CreateRideInput {
   departure: LatLngInput!
   departureAddr: String
@@ -257,6 +267,13 @@ input RequestRideInput {
   pickup: LatLngInput
   pickupAddr: String
   message: String
+}
+
+input CreateReviewInput {
+  rideId: ID!
+  toUserId: ID!
+  rating: Int!
+  comment: String
 }
 
 type RideConnection {
@@ -369,6 +386,8 @@ type Query {
   ride(id: ID!): Ride @auth @companyScope
   myRides(status: RideStatus, pagination: PaginationInput): RideConnection @auth @companyScope
   myRideRequests(status: RequestStatus, pagination: PaginationInput): [RideRequest!]! @auth @companyScope
+  rideReviews(rideId: ID!): [Review!]! @auth @companyScope
+  userReviews(userId: ID!, pagination: PaginationInput): [Review!]! @auth @companyScope
   chatRooms(pagination: PaginationInput): [ChatRoom!]! @auth @companyScope
   messages(roomId: ID!, pagination: PaginationInput): MessageConnection @auth @companyScope
   calculateFare(input: CalculateFareInput!): FareCalculation @auth @companyScope
@@ -408,6 +427,7 @@ type Mutation {
   acceptRideRequest(id: ID!): RideRequest @auth @companyScope
   rejectRideRequest(id: ID!): RideRequest @auth @companyScope
   cancelRideRequest(id: ID!): RideRequest @auth @companyScope
+  createReview(input: CreateReviewInput!): Review @auth @companyScope
   paySettlement(settlementId: ID!, idempotencyKey: String!): Settlement @auth @companyScope
   registerPaymentMethod(input: RegisterPaymentMethodInput!): PaymentMethod @auth
   deletePaymentMethod(id: ID!): Boolean @auth
