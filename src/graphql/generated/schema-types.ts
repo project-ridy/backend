@@ -76,6 +76,14 @@ export type CreateRideInput = {
   readonly preferences: InputMaybe<Scalars['JSON']['input']>;
 };
 
+/** 내부 의존성 상태 */
+export type DependencyHealth = {
+  readonly __typename?: 'DependencyHealth';
+  readonly latencyMs: Maybe<Scalars['Int']['output']>;
+  readonly message: Maybe<Scalars['String']['output']>;
+  readonly status: Scalars['String']['output'];
+};
+
 export type EsgReport = {
   readonly __typename?: 'EsgReport';
   readonly co2SavedKg: Scalars['Float']['output'];
@@ -103,10 +111,14 @@ export type GenerateInviteCodeInput = {
 /** Ridy 백엔드 서비스 상태 */
 export type Health = {
   readonly __typename?: 'Health';
+  readonly database: DependencyHealth;
+  readonly redis: DependencyHealth;
   /** 서비스 식별자 */
   readonly service: Scalars['String']['output'];
   /** 서비스 가용 상태 */
   readonly status: Scalars['String']['output'];
+  readonly timestamp: Scalars['DateTime']['output'];
+  readonly uptimeSec: Scalars['Int']['output'];
 };
 
 /** 회사 초대 코드 */
@@ -726,6 +738,7 @@ export type ResolversTypes = {
   CreateReviewInput: CreateReviewInput;
   CreateRideInput: CreateRideInput;
   DateTime: ResolverTypeWrapper<Scalars['DateTime']['output']>;
+  DependencyHealth: ResolverTypeWrapper<DependencyHealth>;
   EsgReport: ResolverTypeWrapper<EsgReport>;
   FareCalculation: ResolverTypeWrapper<FareCalculation>;
   Float: ResolverTypeWrapper<Scalars['Float']['output']>;
@@ -781,6 +794,7 @@ export type ResolversParentTypes = {
   CreateReviewInput: CreateReviewInput;
   CreateRideInput: CreateRideInput;
   DateTime: Scalars['DateTime']['output'];
+  DependencyHealth: DependencyHealth;
   EsgReport: EsgReport;
   FareCalculation: FareCalculation;
   Float: Scalars['Float']['output'];
@@ -862,6 +876,12 @@ export interface DateTimeScalarConfig extends GraphQLScalarTypeConfig<ResolversT
   name: 'DateTime';
 }
 
+export type DependencyHealthResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['DependencyHealth'] = ResolversParentTypes['DependencyHealth']> = {
+  latencyMs: Resolver<Maybe<ResolversTypes['Int']>, ParentType, ContextType>;
+  message: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  status: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
 export type EsgReportResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['EsgReport'] = ResolversParentTypes['EsgReport']> = {
   co2SavedKg: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   participantCount: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
@@ -880,8 +900,12 @@ export type FareCalculationResolvers<ContextType = GraphQLContext, ParentType ex
 };
 
 export type HealthResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['Health'] = ResolversParentTypes['Health']> = {
+  database: Resolver<ResolversTypes['DependencyHealth'], ParentType, ContextType>;
+  redis: Resolver<ResolversTypes['DependencyHealth'], ParentType, ContextType>;
   service: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   status: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  timestamp: Resolver<ResolversTypes['DateTime'], ParentType, ContextType>;
+  uptimeSec: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
 };
 
 export type InviteCodeResolvers<ContextType = GraphQLContext, ParentType extends ResolversParentTypes['InviteCode'] = ResolversParentTypes['InviteCode']> = {
@@ -1093,6 +1117,7 @@ export type Resolvers<ContextType = GraphQLContext> = {
   ChatRoom: ChatRoomResolvers<ContextType>;
   Company: CompanyResolvers<ContextType>;
   DateTime: GraphQLScalarType;
+  DependencyHealth: DependencyHealthResolvers<ContextType>;
   EsgReport: EsgReportResolvers<ContextType>;
   FareCalculation: FareCalculationResolvers<ContextType>;
   Health: HealthResolvers<ContextType>;
